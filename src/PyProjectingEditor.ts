@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 
-
+let outlineRegionPosition = 0;
 export class PythonProjectingEditorProvider implements vscode.CustomTextEditorProvider {
     public static register(context: vscode.ExtensionContext): vscode.Disposable {
         const provider = new PythonProjectingEditorProvider(context);
@@ -25,7 +25,7 @@ export class PythonProjectingEditorProvider implements vscode.CustomTextEditorPr
         webviewPanel.webview.html = this.getHTMLforWebview(webviewPanel.webview);
         const self = this;
         function updateWebview() {
-            let parsedCode = self.parseCodeWithNaturalLanguage(document);
+            let parsedCode = self.parseCodeWithNaturalLanguage1(document);
             webviewPanel.webview.postMessage({
                 type: 'update',
                 text: parsedCode,
@@ -41,19 +41,25 @@ export class PythonProjectingEditorProvider implements vscode.CustomTextEditorPr
             changeDocumentSubscription.dispose();
         });
 
+        webviewPanel.webview.onDidReceiveMessage(e => {
+            switch (e.type) {
+                case 'changeDisplay':
+                    this.changeDisplay(document, e.displayCode, e.firstLine, e.lastLine);
+                    return;
+
+
+            }
+        });
+
         updateWebview();
 
     }
 
+
+
     private getHTMLforWebview(webview: vscode.Webview) {
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
             this.context.extensionUri, 'media', 'PyProjectingEditor.js'));
-
-
-
-
-
-
         return /* html */`
         <!DOCTYPE html>
         <html lang="en">
@@ -73,49 +79,61 @@ export class PythonProjectingEditorProvider implements vscode.CustomTextEditorPr
 
     }
 
-    private parseCodeWithNaturalLanguage(textDocument: vscode.TextDocument): { code: string, naturalLanguage: string }[] {
+
+    private changeDisplay(textDocument: vscode.TextDocument, isCodeDisplayed: boolean, firstLine: number, lastLine: number) {
+        let jsonStructure = this.parseCodeWithNaturalLanguage1(textDocument);
+        console.log("parameter");
+        console.log(firstLine);
+        console.log("inside function");
+        for(let region of jsonStructure){
+            console.log(region.firstLine);
+        }
+        const item = jsonStructure.find(x => x.firstLine === firstLine && x.lastLine === lastLine);
+        if (item) {
+            console.log(item.isCodeOpened);
+            console.log(isCodeDisplayed);
+            item.isCodeOpened = isCodeDisplayed;
+        }
+        console.log(jsonStructure);
+        this.updateTextDocument(textDocument, jsonStructure);
+    }
+
+    private updateTextDocument(document: vscode.TextDocument, json: any) {
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(
+            document.uri,
+            new vscode.Range(outlineRegionPosition + 1, 0, document.lineCount, 0),
+            JSON.stringify(json, null, 2));
+
+        return vscode.workspace.applyEdit(edit);
+    }
+
+
+
+    private parseCodeWithNaturalLanguage1(textDocument: vscode.TextDocument): { firstLine: number, lastLine: number, code: string, naturalLanguage: string, isCodeOpened: boolean }[] {
         let lineCount = textDocument.lineCount;
-        let codeFragments: { code: string, naturalLanguage: string }[] = [];
-
-        let codeFragment: { code: string, naturalLanguage: string } = { code: '', naturalLanguage: '' };
-        let codeLines: string = '';
-        let NLlines: string = '';
-
-
-        let inCodeRegion: boolean = false;
-        let inNLRegion: boolean = false;
+        let jsonStructure = '';
+        let inJsonStructure = false;
         for (let currentLine = 0; currentLine < lineCount; currentLine++) {
             let lineText = textDocument.lineAt(currentLine).text;
-            if (/#region/.test(lineText)) {
-                codeFragment = { code: '', naturalLanguage: '' };
-                codeLines = '';
-                inCodeRegion = true;
-
-            } else if (/#endregion/.test(lineText) && inCodeRegion) {
-                inCodeRegion = false;
-                codeFragment.code = codeLines;
-                
-
-            } else if (inCodeRegion) {
-                codeLines += lineText + '\n'; 
+            if (/#naturalLanguagesOutline/.test(lineText)) {
+                outlineRegionPosition = currentLine;
+                inJsonStructure = true;
             }
-            if (/#NLregion/.test(lineText)) {
-                NLlines = '';
-                inNLRegion = true;
-
-            } else if (/#NLendregion/.test(lineText) && inNLRegion) {
-                inNLRegion = false;
-                codeFragment.naturalLanguage = NLlines;
-                console.log(codeFragment)
-                codeFragments.push(codeFragment);
-
-            } else if (inNLRegion) {
-                NLlines += lineText + '\n';
+            else if (inJsonStructure) {
+                jsonStructure += lineText;
             }
         }
-        console.log(codeFragments);
+
+        let codeFragments: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, isCodeOpened: boolean }[] = [];
+        codeFragments = JSON.parse(jsonStructure);
+
         return codeFragments;
+
+
     }
+
+
 
 
 

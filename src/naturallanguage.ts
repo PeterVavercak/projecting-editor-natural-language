@@ -1,4 +1,5 @@
 
+import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 
 const DISPLAY_NATURAL_LANGUAGE_PROMPT = 
@@ -54,19 +55,23 @@ async function parseChatResponse1(
   return accumulatedResponse;
 }
 
-function getFoldingRegions(textEditor: vscode.TextEditor) {
+function getFoldingRegions(textEditor: vscode.TextEditor) :{region :{line: number, text: string}[], firstLine: number, lastLine: number}[] {
   let lineCount = textEditor.document.lineCount;
-  let foldingRegions = [];
+  let foldingRegions:{region :{line: number, text: string}[], firstLine: number, lastLine: number}[] = [];
+  let foldingRegion:{region :{line: number, text: string}[], firstLine: number, lastLine: number} = {region :[], firstLine: 0, lastLine: 0};
   let inFoldedRegion = false;
   for (let currentLine = 0; currentLine < lineCount; currentLine++) {
     let lineText = textEditor.document.lineAt(currentLine).text;
     if(/#region/.test(lineText)) {
       inFoldedRegion = true;
-      foldingRegions.push(new Array());
+      foldingRegion = {region :[], firstLine: currentLine, lastLine: 0};
+
     }else if(/#endregion/.test(lineText) && inFoldedRegion) {
       inFoldedRegion = false;
+      foldingRegion.lastLine = currentLine;
+      foldingRegions.push(foldingRegion);
     }else if(inFoldedRegion) {
-      foldingRegions[foldingRegions.length - 1].push({line: currentLine + 1, text: textEditor.document.lineAt(currentLine).text});
+      foldingRegion.region.push({line: currentLine + 1, text: textEditor.document.lineAt(currentLine).text});
      // foldingRegions[foldingRegions.length - 1].push(`${currentLine + 1}: ${textEditor.document.lineAt(currentLine).text} \n`);
     }
   }
@@ -79,36 +84,41 @@ function getFoldingRegions(textEditor: vscode.TextEditor) {
   return foldingRegions;
 }
 
-function getText(foldingRegion: {line: number , text: string}[]){
+function getText(foldingRegion: {region :{line: number, text: string}[], firstLine: number, lastLine: number}){
   let returnText = '';
-  for(let i = 0; i < foldingRegion.length; i++){
-    returnText += foldingRegion[i].text + '\n';
+  for(let i = 0; i < foldingRegion.region.length; i++){
+    returnText += foldingRegion.region[i].text + '\n';
   }
   return returnText;
 }
 
-function writeNaturalLanguage(textEditor: vscode.TextEditor, naturalLanguageTexts: string[] , foldedRegions: {line:number, text:string}[][]){
-  textEditor.edit(
+function writeNaturalLanguage(textEditor: vscode.TextEditor, naturalLanguageTexts: string[] , foldedRegions:{region :{line: number, text: string}[], firstLine: number, lastLine: number}[]){
+   textEditor.edit(
     editBuilder =>
     {
+      let jsonStructures :  { firstLine: number, lastLine: number, code: string, naturalLanguage: string, isCodeOpened: number }[] = [];
       for(let i = 0; i < foldedRegions.length; i++){
-        let lengthOfFolded = foldedRegions[i].length;
-        let nextPosition = foldedRegions[i][lengthOfFolded - 1].line;
-        let insertedText = '\n"""\n';
-        insertedText += "#NLregion\n";
-        insertedText += naturalLanguageTexts[i];
-        insertedText += '\n#NLendregion\n';
-        insertedText += '"""\n';
-        let naturalLPosition = new vscode.Position(nextPosition + 1,0);
-        editBuilder.insert(naturalLPosition, insertedText);
+       
+        jsonStructures.push({
+          firstLine: foldedRegions[i].firstLine,
+          lastLine: foldedRegions[i].lastLine,
+          code: getText(foldedRegions[i]),
+          naturalLanguage: naturalLanguageTexts[i],
+          isCodeOpened: 1
+        });
+
+      
       }
+      let insertedText = 'naturalLanguagesOutline = ' + JSON.stringify(jsonStructures, null, 2);
+      let naturalLPosition = new vscode.Position(textEditor.document.lineCount + 1,0);
+      editBuilder.insert(naturalLPosition, insertedText);
     }
   );
 }
 
 
 
-export function parseCodeWithNaturalLanguage(textEditor: vscode.TextEditor): {code: string, naturalLanguage: string}[]{
+function parseCodeWithNaturalLanguage(textEditor: vscode.TextEditor): {code: string, naturalLanguage: string}[]{
   let lineCount = textEditor.document.lineCount;
   let codeFragments :{code: string, naturalLanguage: string}[] = [];
 
