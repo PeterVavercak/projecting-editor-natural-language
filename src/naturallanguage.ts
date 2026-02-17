@@ -1,164 +1,243 @@
 
 import { stringify } from 'querystring';
 import * as vscode from 'vscode';
+import { parseText, writeNaturalLanguage } from './Parser';
 
-const DISPLAY_NATURAL_LANGUAGE_PROMPT = 
-`
+const DISPLAY_NATURAL_LANGUAGE_PROMPT =
+    `
 # Identity
 
 You are a translator who would translate given code into into natural language text and vice versa
 
 # Instructions
 
-* Summarize selected code in more than five points
+* Explain code in one line
+
 `;
 
-export const foldDisposable = vscode.commands.registerTextEditorCommand('code-tutor.fold',
-    async (textEditor: vscode.TextEditor) =>{
-        const foldingRegions = getFoldingRegions(textEditor);
-        let [model] = await vscode.lm.selectChatModels({
-            vendor: 'copilot',
-            family: 'gpt-4o'
-        });
-        let naturalLanguageText: string[] = [];
-        for(let i = 0; i < foldingRegions.length; i++){
-            const messages = [
-                vscode.LanguageModelChatMessage.User(DISPLAY_NATURAL_LANGUAGE_PROMPT),
-                vscode.LanguageModelChatMessage.User(getText(foldingRegions[i]))
-            ];
-            let returnedText: string = '';
-            if (model){
-                let chatResponse = await model.sendRequest(
-                messages,
-                {},
-                new vscode.CancellationTokenSource().token
-                );
-                returnedText = await parseChatResponse1(chatResponse);
+const GENERATE_CODE =
+    `
+# Identity
+
+You are a translator who generates code in python based on given input in form of natural language
+
+# Instructions
+
+
+* Generate code as accurate as possible based on given input
+* Generate code in python
+* Don't generate any comment to code.
+* If code doesn't have new Line operator at the end add it.
+* Return Code as text with only with separated lines
+`;
+
+const UPDATE_CODE_BASED_ON_NATURAL_LANGUAGE =
+    `
+# Identity
+
+You are a translator who would update natural language description with provided code and 
+
+# Instructions
+
+* If code fits natural language text. Keep it as it is.
+* Do as minimal changes to code as possible based on natural language description
+* If natural language text is completely different from the code provided, then you can generate completely different code
+* If it is new code only return code without any additional information or comments
+* If code doesn't have new Line operator at the end add it.
+* Return Code as text with only with separated lines
+`;
+
+const UPDATE_NATURAL_LANGUAGE =
+    `
+# Identity
+
+You are a translator who would update given natural language description based on updated code written in python
+
+# Instructions
+
+* First comes previous version of code made in python
+* Second comes description of the previous code in natural language
+* Third comes new version of code made in python
+* Check how the previous version of the code is translated to its natural language
+* Create new natural language description based on new version of the code
+* Create new version of the natural language so it would fit old connection between natural language
+* If old natural language description fits new version of the code, return the old natural language description
+* Do as minimal change to new natural language description as possible so it would fit the new version of the code
+* If the new version of code is completely different old natural language description, generate completely new natural language description for new version of code
+* If old natural language description does't fit old version of the code, generate completely new version of the natural language description for the version of the code
+* Newly generated code should fit into one line
+`;
+
+export async function updateDoc(
+    currentDoc: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[],
+    lastSnapshot: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[]
+): Promise<void> {
+
+
+    let [model] = await vscode.lm.selectChatModels({
+        vendor: 'copilot',
+        family: 'gpt-4o'
+    });
+    for (let foldRegion of currentDoc) {
+        const found = lastSnapshot.find(o => o.id === foldRegion.id) ?? null;
+        if (found === null) {
+            if (foldRegion.code === '' && foldRegion.naturalLanguage === '') {
+                // do nothing
+            } else if (foldRegion.code === '') {
+                foldRegion.code = await generateCode(model, foldRegion);
+            } else if (foldRegion.naturalLanguage === '') {
+                foldRegion.naturalLanguage = await generateNaturalLanguage(model, foldRegion);
+            } else {
+                //check and update
             }
-            naturalLanguageText.push(returnedText);
-            console.log(returnedText);
+        } else {
+            if (found.code !== foldRegion.code && found.naturalLanguage !== foldRegion.naturalLanguage) {
+                // update Natural Language
+            } else if (found.code !== foldRegion.code) {
+                console.log("update NL");
+                foldRegion.naturalLanguage = await updateNaturalLanguage(model, foldRegion, found);
+            } else if (found.naturalLanguage !== foldRegion.naturalLanguage) {
+                // update Code
+            } else if (foldRegion.code === '' && foldRegion.naturalLanguage === '') {
+                // do nothing
+            } else if (foldRegion.code === '') {
+                foldRegion.code = await generateCode(model, foldRegion);
+            } else if (foldRegion.naturalLanguage === '') {
+                foldRegion.naturalLanguage = await generateNaturalLanguage(model, foldRegion);
+            } else {
+                //check and update
+            }
         }
-        writeNaturalLanguage(textEditor, naturalLanguageText, foldingRegions);
+
     }
-);
-  
+
+}
+
+export async function writeNL(
+    currentDoc: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[],
+    lastSnapshot: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[]
+): Promise<void> {
 
 
-async function parseChatResponse1(
-  chatResponse: vscode.LanguageModelChatResponse,
+    let [model] = await vscode.lm.selectChatModels({
+        vendor: 'copilot',
+        family: 'gpt-4o'
+    });
+    for (let foldRegion of currentDoc) {
+        const found = lastSnapshot.find(o => o.id === foldRegion.id) ?? null;
+        if (found === null) {
+            if (foldRegion.code === '' && foldRegion.naturalLanguage === '') {
+                // do nothing
+            } else if (foldRegion.code === '') {
+                // do nothing
+            } else if (foldRegion.naturalLanguage === '') {
+                foldRegion.naturalLanguage = await generateNaturalLanguage(model, foldRegion);
+            } else {
+                //check and update
+            }
+        } else {
+            if (found.code !== foldRegion.code && found.naturalLanguage !== foldRegion.naturalLanguage) {
+                // update Natural Language
+            } else if (found.code !== foldRegion.code) {
+                console.log("update NL");
+                foldRegion.naturalLanguage = await updateNaturalLanguage(model, foldRegion, found);
+            } else if (found.naturalLanguage !== foldRegion.naturalLanguage) {
+                // do nothing
+            } else if (foldRegion.code === '' && foldRegion.naturalLanguage === '') {
+                // do nothing
+            } else if (foldRegion.code === '') {
+                // do nothing
+            } else if (foldRegion.naturalLanguage === '') {
+                foldRegion.naturalLanguage = await generateNaturalLanguage(model, foldRegion);
+            } else {
+                //check and update
+            }
+        }
+
+    }
+
+}
+
+
+async function generateNaturalLanguage(
+    model: vscode.LanguageModelChat,
+    currentRegion: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }
+): Promise<string> {
+    const messages = [
+        vscode.LanguageModelChatMessage.User(DISPLAY_NATURAL_LANGUAGE_PROMPT),
+        vscode.LanguageModelChatMessage.User(currentRegion.code)
+    ];
+    let returnText: string = '';
+    if (model) {
+        let chatResponse = await model.sendRequest(
+            messages,
+            {},
+            new vscode.CancellationTokenSource().token
+        );
+        returnText = await parseChatResponse(chatResponse);
+    }
+    return returnText;
+}
+
+
+async function updateNaturalLanguage(
+    model: vscode.LanguageModelChat,
+    currentRegion: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number },
+    oldRegion: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }
+): Promise<string> {
+    let returnedText: string;
+    const messages = [
+        vscode.LanguageModelChatMessage.User(UPDATE_NATURAL_LANGUAGE),
+        vscode.LanguageModelChatMessage.User(oldRegion.code),
+        vscode.LanguageModelChatMessage.User(oldRegion.naturalLanguage),
+        vscode.LanguageModelChatMessage.User(currentRegion.code)
+    ];
+    let returnText: string = '';
+    if (model) {
+        let chatResponse = await model.sendRequest(
+            messages,
+            {},
+            new vscode.CancellationTokenSource().token
+        );
+        returnText = await parseChatResponse(chatResponse);
+    }
+    return returnText;
+}
+
+export async function generateCode(
+    model: vscode.LanguageModelChat,
+    currentRegion: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }
+): Promise<string> {
+
+    const messages = [
+        vscode.LanguageModelChatMessage.User(GENERATE_CODE),
+        vscode.LanguageModelChatMessage.User(currentRegion.naturalLanguage),
+    ];
+    let returnedText: string = '';
+    if (model) {
+        let chatResponse = await model.sendRequest(
+            messages,
+            {},
+            new vscode.CancellationTokenSource().token
+        );
+        returnedText = await parseChatResponse(chatResponse);
+    }
+    return returnedText;
+}
+
+async function parseChatResponse(
+    chatResponse: vscode.LanguageModelChatResponse,
 ) {
-  let accumulatedResponse:string = '';
+    let accumulatedResponse: string = '';
 
-  for await (const fragment of chatResponse.text) {
-    accumulatedResponse += fragment;    
-  }
-  return accumulatedResponse;
-}
-
-function getFoldingRegions(textEditor: vscode.TextEditor) :{region :{line: number, text: string}[], firstLine: number, lastLine: number}[] {
-  let lineCount = textEditor.document.lineCount;
-  let foldingRegions:{region :{line: number, text: string}[], firstLine: number, lastLine: number}[] = [];
-  let foldingRegion:{region :{line: number, text: string}[], firstLine: number, lastLine: number} = {region :[], firstLine: 0, lastLine: 0};
-  let inFoldedRegion = false;
-  for (let currentLine = 0; currentLine < lineCount; currentLine++) {
-    let lineText = textEditor.document.lineAt(currentLine).text;
-    if(/#region/.test(lineText)) {
-      inFoldedRegion = true;
-      foldingRegion = {region :[], firstLine: currentLine, lastLine: 0};
-
-    }else if(/#endregion/.test(lineText) && inFoldedRegion) {
-      inFoldedRegion = false;
-      foldingRegion.lastLine = currentLine;
-      foldingRegions.push(foldingRegion);
-    }else if(inFoldedRegion) {
-      foldingRegion.region.push({line: currentLine + 1, text: textEditor.document.lineAt(currentLine).text});
-     // foldingRegions[foldingRegions.length - 1].push(`${currentLine + 1}: ${textEditor.document.lineAt(currentLine).text} \n`);
+    for await (const fragment of chatResponse.text) {
+        accumulatedResponse += fragment;
     }
-  }
-
-  for (let foldingRegion of foldingRegions) {
-    console.log(foldingRegion);
-    console.log(getText(foldingRegion));
-  }
-  console.log(`Total lines in document: ${lineCount}`);
-  return foldingRegions;
-}
-
-function getText(foldingRegion: {region :{line: number, text: string}[], firstLine: number, lastLine: number}){
-  let returnText = '';
-  for(let i = 0; i < foldingRegion.region.length; i++){
-    returnText += foldingRegion.region[i].text + '\n';
-  }
-  return returnText;
-}
-
-function writeNaturalLanguage(textEditor: vscode.TextEditor, naturalLanguageTexts: string[] , foldedRegions:{region :{line: number, text: string}[], firstLine: number, lastLine: number}[]){
-   textEditor.edit(
-    editBuilder =>
-    {
-      let jsonStructures :  { firstLine: number, lastLine: number, code: string, naturalLanguage: string, isCodeOpened: number }[] = [];
-      for(let i = 0; i < foldedRegions.length; i++){
-       
-        jsonStructures.push({
-          firstLine: foldedRegions[i].firstLine,
-          lastLine: foldedRegions[i].lastLine,
-          code: getText(foldedRegions[i]),
-          naturalLanguage: naturalLanguageTexts[i],
-          isCodeOpened: 1
-        });
-
-      
-      }
-      let insertedText = 'naturalLanguagesOutline = ' + JSON.stringify(jsonStructures, null, 2);
-      let naturalLPosition = new vscode.Position(textEditor.document.lineCount + 1,0);
-      editBuilder.insert(naturalLPosition, insertedText);
-    }
-  );
+    return accumulatedResponse;
 }
 
 
 
-function parseCodeWithNaturalLanguage(textEditor: vscode.TextEditor): {code: string, naturalLanguage: string}[]{
-  let lineCount = textEditor.document.lineCount;
-  let codeFragments :{code: string, naturalLanguage: string}[] = [];
-
-  let codeFragment :{code: string, naturalLanguage: string} = {code: '', naturalLanguage: ''};
-  let codeLines: string = '';
-  let NLlines: string = '';
-
-  
-  let inCodeRegion: boolean = false;
-  let inNLRegion: boolean = false;
-  for (let currentLine = 0; currentLine < lineCount; currentLine++) {
-    let lineText = textEditor.document.lineAt(currentLine).text;
-    if(/#region/.test(lineText)) {
-      codeFragment = {code: '', naturalLanguage: ''};
-      codeLines = '';
-      inCodeRegion = true;
-      
-    }else if(/#endregion/.test(lineText) && inCodeRegion) {
-      inCodeRegion = false;
-      codeFragment.code = codeLines;
-
-    }else if(inCodeRegion) {
-      codeLines += lineText + '\n';
-    }
-    if(/#NLregion/.test(lineText)) {
-      NLlines = '';
-      inNLRegion = true;
-      
-    }else if(/#NLendregion/.test(lineText) && inNLRegion) {
-      inNLRegion = false;
-      codeFragment.naturalLanguage = NLlines;
-      codeFragments.push(codeFragment);
-
-    }else if(inNLRegion) {
-      NLlines += lineText + '\n';
-    }
-  }
-
-  return codeFragments;
-}
 
 
 

@@ -9,44 +9,27 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-    "customEditors": [
-      {
-        "viewType": "python.projecting-editor",
-          "displayName": "Python projecting editor",
-          "selector": [
-            {
-              "filenamePattern": "*.py"
-            }
-          ]
-      }
-    ],
+    
     "commands": [
       {
-        "command": "code-tutor.annotate",
-        "title": "Toggle Tutor Annotations",
-        "icon": "$(comment)"
+        "command": "nlDisplay.createOrUpdate",
+        "title": "Create or update",
+        "category": "NL Display"
       },{
-        "command": "code-tutor.fold",
-        "title": "Try Code Folding",
-        "icon": "$(fold)"
+        "command": "nlDisplay.readContent",
+        "title": "Read Content",
+        "category": "NL Display"
       },{
-				"command": "code-tutor.webview",
-				"title": "Code tutor webview",
-				"category": "UI"
-			}
-
-    ],
-    "menus": {
-      "editor/title": [
-        {
-          "command": "code-tutor.annotate",
-          "group": "navigation"
-        }
-      ]
-    }
+        "command": "nlDisplay.writeNL",
+        "title": "Write Natural Language",
+        "category": "NL Display"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
