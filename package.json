@@ -28,6 +28,10 @@
         "command": "nlDisplay.writeNL",
         "title": "Write Natural Language",
         "category": "NL Display"
+      },{
+        "command": "nlDisplay.witeCode",
+        "title": "Write Cod",
+        "category": "NL Display"
       }
     ]
   },

@@ -1,5 +1,5 @@
 # explain
-#region Hel World
+#region Generate Pascal's Triangle pattern based on user input for rows
 
 rows = int(input("Enter number of rows: "))
 coef = 1
@@ -24,7 +24,7 @@ for i in range(1, rows+1):
 }
 
 
-#region
+#region Generate right-angled triangle pattern of asterisks based on user input for rows
 rows = int(input("Enter number of rows: "))
 
 for i in range(rows):

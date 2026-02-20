@@ -49,6 +49,16 @@ export function parseText(documentText: string): { firstLine: number, lastLine: 
     return foldingRegions;
 }
 
+export function getDocumentLines(document: vscode.TextDocument): string{
+    let text = '';
+    for(let currentLine = 0; currentLine < document.lineCount; currentLine++){
+        text += currentLine + ': ' + document.lineAt(currentLine).text + '\n';   
+    }
+    return text;
+}
+
+
+
 export function writeNaturalLanguage(textDocument: vscode.TextDocument, foldedRegions: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[]) {
     const edit = new vscode.WorkspaceEdit();
     

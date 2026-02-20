@@ -1,8 +1,8 @@
 // src/commands.ts
 import * as vscode from "vscode";
 import { SnapshotProvider } from "./ContentProvider";
-import { parseText, writeNaturalLanguage } from "./Parser";
-import { updateDoc } from "./naturallanguage";
+import { getDocumentLines, parseText, writeNaturalLanguage } from "./Parser";
+import { updateDoc, writeAllNL } from "./naturallanguage";
 import { write } from "fs";
 
 /** Register commands and return disposables to push into subscriptions. */
@@ -58,20 +58,30 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
     if (!editor) return;
 
     const doc = editor.document;
-    const snapshotContent = provider.getSnapshotContentFor(doc.uri);
-    const documentContent = doc.getText();
+    const documentLines = getDocumentLines(doc);
+//    console.log(documentLines);
+    writeAllNL(documentLines, doc);
+/*
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(
+                doc.uri,
+                new vscode.Range(0, 0, 0, 0),
+                documentLines
+    );
+    vscode.workspace.applyEdit(edit);
+*/
 
-    if (snapshotContent !== undefined && documentContent !== undefined) {
-      const snapshotStructure = parseText(snapshotContent);
-      const docStructure = parseText(documentContent);
+  });
 
+   const writeCode = vscode.commands.registerCommand('nlDisplay.writeCode', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const doc = editor.document;
+    const documentLines = getDocumentLines(doc);
+    
 
-      await updateDoc(docStructure, snapshotStructure);
+   
 
-
-      writeNaturalLanguage(doc, docStructure);
-
-    }
 
 
   });
