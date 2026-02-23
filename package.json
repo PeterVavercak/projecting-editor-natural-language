@@ -27,13 +27,26 @@
       },{
         "command": "nlDisplay.writeNL",
         "title": "Write Natural Language",
-        "category": "NL Display"
+        "category": "NL Display",
+        "icon": "$(call-incoming)"
       },{
-        "command": "nlDisplay.witeCode",
-        "title": "Write Cod",
-        "category": "NL Display"
+        "command": "nlDisplay.writeCode",
+        "title": "Write Code",
+        "category": "NL Display",
+        "icon": "$(call-outgoing)"
       }
-    ]
+    ],"menus": {
+      "editor/title": [
+        {
+          "command": "nlDisplay.writeNL",
+          "group": "navigation"
+        },{
+          "command": "nlDisplay.writeCode",
+          "group": "navigation"
+        }
+        
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

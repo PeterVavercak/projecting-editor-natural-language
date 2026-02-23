@@ -2,7 +2,7 @@
 import * as vscode from "vscode";
 import { SnapshotProvider } from "./ContentProvider";
 import { getDocumentLines, parseText, writeNaturalLanguage } from "./Parser";
-import { updateDoc, writeAllNL } from "./naturallanguage";
+import { updateDoc, writeAllCodes, writeAllNL } from "./naturallanguage";
 import { write } from "fs";
 
 /** Register commands and return disposables to push into subscriptions. */
@@ -59,9 +59,8 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
 
     const doc = editor.document;
     const documentLines = getDocumentLines(doc);
-//    console.log(documentLines);
     writeAllNL(documentLines, doc);
-/*
+  /*  
     const edit = new vscode.WorkspaceEdit();
     edit.replace(
                 doc.uri,
@@ -69,7 +68,7 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
                 documentLines
     );
     vscode.workspace.applyEdit(edit);
-*/
+    */
 
   });
 
@@ -78,6 +77,9 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
     if (!editor) return;
     const doc = editor.document;
     const documentLines = getDocumentLines(doc);
+    writeAllCodes(documentLines, doc);
+
+   // console.log(JSON.stringify(doc.getText()));
     
 
    
