@@ -14,38 +14,87 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    
     "commands": [
       {
         "command": "nlDisplay.createOrUpdate",
         "title": "Create or update",
         "category": "NL Display"
-      },{
+      },
+      {
         "command": "nlDisplay.readContent",
         "title": "Read Content",
         "category": "NL Display"
-      },{
+      },
+      {
         "command": "nlDisplay.writeNL",
         "title": "Write Natural Language",
         "category": "NL Display",
         "icon": "$(call-incoming)"
-      },{
+      },
+      {
         "command": "nlDisplay.writeCode",
         "title": "Write Code",
         "category": "NL Display",
         "icon": "$(call-outgoing)"
+      },
+      {
+        "command": "test.testCommand",
+        "title": "Test Command",
+        "category": "Test"
+      },
+      {
+        "command": "hello-world.helloWorld",
+        "title": "Hello World"
       }
-    ],"menus": {
+    ],
+    "menus": {
       "editor/title": [
         {
           "command": "nlDisplay.writeNL",
           "group": "navigation"
-        },{
+        },
+        {
           "command": "nlDisplay.writeCode",
           "group": "navigation"
         }
-        
       ]
+    },
+    "configuration": {
+      "title": "Settings Editor Test Extension",
+      "type": "object",
+      "properties": {
+        "settingsEditorTestExtension.enumSetting": {
+          "type": "string",
+          "enum": [
+            "gpt-4o",
+            "grok-code-fast-1",
+            "gpt-5",
+            "gpt-5-mini",
+            "gpt-5-nano",
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "gemini-2.5-pro",
+            "claude-opus-4.6",
+            "claude-sonnet-4.6"
+          ],
+          "enumItemLabels": [
+            "Chat GPT 4o",
+            "Grok",
+            "Chat GPT 5",
+            "Chat GPT 5 mini",
+            "Chat GPT 5 nano",
+            "Chat GPT 4.1",
+            "Chat GPT 4.1 mini",
+            "Chat Gpt 4.1 nano",
+            "Gemini 2.5 Pro",
+            "Claude Opus 4.6",
+            "Claude Sonnet 4.6"
+          ],
+          "default": "gpt-4o",
+          "description": "Example setting with an enum"
+        }
+      }
     }
   },
   "scripts": {
@@ -57,13 +106,16 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.107.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.48.1",
+    "@types/vscode": "^1.107.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.48.1"
+  },
+  "dependencies": {
+    "vscode-languageserver-protocol": "^3.17.5"
   }
 }

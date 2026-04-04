@@ -4,6 +4,8 @@ import * as vscode from 'vscode';
 
 
 
+
+
 export function parseText(documentText: string): { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[] {
     
     const documentLines = documentText.split(/\r?\n/);
@@ -14,6 +16,7 @@ export function parseText(documentText: string): { firstLine: number, lastLine: 
     let foldingRegion: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number } = { firstLine: 0, lastLine: 0, code: '', naturalLanguage: '', id: 0 };
     let inFoldedRegion = false;
     let codeText: string = '';
+    let ids: number[] = [0];
     for (let currentLine = 0; currentLine < lineCount; currentLine++) {
         const lineText = documentLines[currentLine];
         if (/#region/.test(lineText)) {
@@ -29,11 +32,12 @@ export function parseText(documentText: string): { firstLine: number, lastLine: 
             foldingRegion.code = codeText;
             foldingRegion.lastLine = currentLine;
             const id = lineText.slice(11);
-            if (isNumericString(id)) {
+            if (isNumericString(id) && id !== '0') {
                 foldingRegion.id = Number(id);
             } else {
-                foldingRegion.id = 0;
+                foldingRegion.id = Math.max(...ids) + 1;
             }
+            ids.push(foldingRegion.id);
 
             foldingRegions.push(foldingRegion);
         } else if (inFoldedRegion) {
@@ -59,13 +63,13 @@ export function getDocumentLines(document: vscode.TextDocument): string{
 
 
 
+
 export function writeNaturalLanguage(textDocument: vscode.TextDocument, foldedRegions: { firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[]) {
     const edit = new vscode.WorkspaceEdit();
     
 
     for (let foldedRegion of foldedRegions) {
 
-        foldedRegion.id = foldedRegion.id === 0 ? Math.max(...getAllIds(foldedRegions)) + 1 : foldedRegion.id;
         edit.replace(
             textDocument.uri,
             new vscode.Range(foldedRegion.firstLine, 0, foldedRegion.firstLine, textDocument.lineAt(foldedRegion.firstLine).text.length),
@@ -81,11 +85,12 @@ export function writeNaturalLanguage(textDocument: vscode.TextDocument, foldedRe
     vscode.workspace.applyEdit(edit);
 }
 
+ 
+
 function getAllIds(
     foldedRegions: {firstLine: number, lastLine: number, code: string, naturalLanguage: string, id: number }[]
 ): number[] {
     return foldedRegions.map(o => o.id);
-
 }
 
 function isNumericString(str: string) {

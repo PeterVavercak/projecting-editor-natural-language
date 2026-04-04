@@ -2,8 +2,8 @@
 import * as vscode from "vscode";
 import { SnapshotProvider } from "./ContentProvider";
 import { getDocumentLines, parseText, writeNaturalLanguage } from "./Parser";
-import { updateDoc, writeAllCodes, writeAllNL } from "./naturallanguage";
-import { write } from "fs";
+import { writeAllCodes, writeAllNL } from "./NaturalLanguageTextDoc";
+
 
 /** Register commands and return disposables to push into subscriptions. */
 export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Disposable[] {
@@ -43,7 +43,7 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
       console.log('document structure');
       console.log(docStructure);
 
-      await updateDoc(docStructure, snapshotStructure);
+    //  await updateDoc(doc,docStructure, snapshotStructure);
 
 
       writeNaturalLanguage(doc, docStructure);
@@ -71,7 +71,6 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
     */
 
   });
-
    const writeCode = vscode.commands.registerCommand('nlDisplay.writeCode', async () => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
@@ -88,5 +87,36 @@ export function registerSnapshotCommands(provider: SnapshotProvider): vscode.Dis
 
   });
 
-  return [createOrUpdate, getContent, writeNL];
+  const testCommand = vscode.commands.registerCommand('test.testCommand', async () => {
+    const edit = new vscode.WorkspaceEdit();
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const documentLines = getDocumentLines(editor.document);
+    console.log(documentLines);
+    edit.insert(
+      editor.document.uri,
+      new vscode.Position(0,0),
+      documentLines
+    );
+    vscode.workspace.applyEdit(edit);
+   // const editor = vscode.window.activeTextEditor;
+   // if (!editor) return;
+   // const doc = editor.document;
+
+   // console.log(JSON.stringify(doc.getText()));
+
+
+
+  });
+  const helloWorld= vscode.commands.registerCommand('hello-world.helloWorld', () => {
+		// The code you place here will be executed every time your command is executed
+
+		// Display a message box to the user
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    console.log(JSON.stringify(editor.document.getText()));
+		
+	});
+
+  return [createOrUpdate, getContent, writeNL, writeCode, testCommand, helloWorld];
 }
