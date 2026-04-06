@@ -65,3 +65,4 @@ export class SnapshotProvider implements vscode.TextDocumentContentProvider, vsc
     return uri.path.startsWith("/") ? uri.path.slice(1) : uri.path;
   }
 }
+

@@ -1,33 +1,95 @@
-import { TextEditor, commands } from "vscode";
-import { BetterFoldingRange, FoundLanguageTranslation } from "../../types";
+import { TextDocument, TextEditor, commands } from "vscode";
+import { BetterFoldingRange, LanguageTranslation, LastFoldedLine, NaturalLanguageRegionCouple, TreeNode } from "../../types";
 import FoldedLinesManager from "./foldedLinesManager";
 import ManipulatedFoldManager from "./manipulateFoldManager";
 
-import { foldingRangeToRange, pairByRelation } from "./functions/utils";
+import { foldingRangeToRange, forEachForestLevel, getMaxObject, getNaturalLanguageAndCodeRegionText, pairByRelation } from "./functions/utils";
 import { generateLanguageResponse } from "../../NaturalLanguageSegments";
 import RegionRangesProvider from "../../providers/regionRangesProvider";
-/*
-class FoldingManager {
-    //Singleton
-    private static _instance: FoldingManager;
-    public static get instance(): FoldingManager {
-        this._instance = this._instance ? this._instance : new FoldingManager();
-        return this._instance;
-    }
-    
-    */
+import { SnapshotProvider } from "../../ContentProvider";
+import * as config from "../../configuration";
 
-export function openComplementaryRegion(editor: TextEditor, regionRangesProvider: RegionRangesProvider) {
+
+
+export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: BetterFoldingRange[]){
+    const couples = findCouples(ranges);
+    const rootCouples = couples.filter(couple => couple.nesting === 0);
+    const childrenMap = buildChildrenMap(couples);
+    const transformToRange = foldingRangeToRange(editor.document);
+    forEachForestLevel(
+        rootCouples,
+        childrenMap,
+        (couple) => {
+            if(
+                couple.naturalLanguageFolding !== undefined
+            ){
+                if(
+                    FoldedLinesManager.isFolded(transformToRange(couple.naturalLanguageFolding), editor) === true
+                ){
+                    commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
+                    ManipulatedFoldManager.setCommandInvoked(editor, true);
+                }
+                if(
+                    couple.codeFolding !== undefined &&
+                    FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === false
+                ){
+                    commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
+                    ManipulatedFoldManager.setCommandInvoked(editor, true);
+                }
+            }
+            else if(
+                couple.codeFolding !== undefined &&
+                FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === true
+            ){
+                commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
+                ManipulatedFoldManager.setCommandInvoked(editor, true);
+            }
+        },
+        (couple) => couple.naturalLanguageFolding !== undefined && couple.codeFolding !== undefined
+    );
+}
+
+export function showAllCodeRegions(editor: TextEditor, ranges: BetterFoldingRange[]){
+    const couples = findCouples(ranges);
+    const rootCouples = couples.filter(couple => couple.nesting === 0);
+    const childrenMap = buildChildrenMap(couples);
+    const transformToRange = foldingRangeToRange(editor.document);
+    forEachForestLevel(
+        rootCouples,
+        childrenMap,
+        (couple) => {
+            if(
+                couple.naturalLanguageFolding !== undefined &&
+                FoldedLinesManager.isFolded(transformToRange(couple.naturalLanguageFolding), editor) === false
+            ){
+                commands.executeCommand('editor.fold', { selectionLines: [couple.naturalLanguageFolding.start] });
+                ManipulatedFoldManager.setCommandInvoked(editor, true);
+            }
+            if(
+                couple.codeFolding !== undefined &&
+                FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === true
+            ){
+                commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
+                ManipulatedFoldManager.setCommandInvoked(editor, true);
+
+            }
+        }
+    );
+}
+
+export function openComplementaryRegion(editor: TextEditor, regionRangesProvider: RegionRangesProvider, contentProvider: SnapshotProvider) {
 
     const lastFolding = ManipulatedFoldManager.getLastManipulatedFolding(editor);
     if (lastFolding === undefined) {
         return;
     }
-//    console.log(lastFolding);
+    //    console.log(lastFolding);
     const foldingRanges = regionRangesProvider.getRanges(editor.document);
     const foldMap = createFoldTranslationsMap(foldingRanges);
-    const lastFoldingAction = lastFolding.lastFoldingAction;
     const foundTranslation = foldMap.get(lastFolding.foldingLine);
+    if(foundTranslation === undefined){
+        return;
+    }
     const [foundComplementaryRegion, chosenRegion] = foundTranslation?.hasFolded === 'code' ? [
         foundTranslation.naturalLanguageFolding,
         foundTranslation.codeFolding
@@ -35,89 +97,180 @@ export function openComplementaryRegion(editor: TextEditor, regionRangesProvider
         foundTranslation?.codeFolding,
         foundTranslation?.naturalLanguageFolding
     ];
-    const closingCodeRegion = chosenRegion?.foldingType === 'code' && lastFoldingAction === 'wasFolded';
-    const closingLanguageRegion = chosenRegion?.foldingType === 'natural language' && lastFoldingAction === 'wasFolded';
-    const openingCodeRegion = chosenRegion?.foldingType === 'code' && lastFoldingAction === 'wasUnfolded';
-    const openingLanguageRegion = chosenRegion?.foldingType === 'natural language' && lastFoldingAction === 'wasUnfolded';
+    if(chosenRegion === undefined){
+        return;
+    }
+    if(wasTranslationUpdated(contentProvider, editor.document, foundTranslation)){
+        generateTranslationRegion(editor.document, foundTranslation, chosenRegion, lastFolding);
+    }
+    contentProvider.saveFromDocument(editor.document);
 
-    if (openingLanguageRegion) {               
-        // update natural language
-        console.log('updating natural language');
-        generateLanguageResponse(editor.document, chosenRegion, foundComplementaryRegion, 'updateNL');
-    } else if (closingCodeRegion){
-        if (foundComplementaryRegion === undefined) {
+    foldUnfoldComplementaryRegion(editor, lastFolding, foundComplementaryRegion);
+
+
+    FoldedLinesManager.updateFoldedLines(editor);
+    //   ManipulatedFoldManager.updateFoldedLines(editor, regionRangesProvider);
+}
+
+function buildChildrenMap(
+  all: NaturalLanguageRegionCouple[]
+): Map<NaturalLanguageRegionCouple, NaturalLanguageRegionCouple[]> {
+  const map = new Map<
+    NaturalLanguageRegionCouple,
+    NaturalLanguageRegionCouple[]
+  >();
+
+  for (const parent of all) {
+    map.set(parent, []);
+  }
+
+  for (const parent of all) {
+    for (const child of all) {
+      if (parent === child) continue;
+
+      if (isChild(parent, child)) {
+        map.get(parent)!.push(child);
+      }
+    }
+  }
+
+  return map;
+}
+
+function isChild(
+  parent: NaturalLanguageRegionCouple,
+  child: NaturalLanguageRegionCouple
+): boolean {
+  if (!parent.codeFolding || parent.nesting === undefined) return false;
+
+  const parentStart = parent.codeFolding.start;
+  const parentEnd = parent.codeFolding.end;
+
+  const childStart =
+    child.naturalLanguageFolding?.start ?? child.codeFolding?.start;
+  const childEnd =
+    child.codeFolding?.end ?? child.naturalLanguageFolding?.end;
+
+  if (childStart === undefined || childEnd === undefined) return false;
+
+  return (
+    childStart > parentStart &&
+    childEnd < parentEnd &&
+    child.nesting === parent.nesting + 1
+  );
+}
+
+function generateTranslationRegion(document: TextDocument, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine){
+    if(!config.getAutomaticTranslation()){
+        return;
+    }
+    const closingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasFolded';
+    const closingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasFolded';
+    const openingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasUnfolded';
+    const openingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasUnfolded';
+   
+    if (closingCodeRegion || openingLanguageRegion) {
+        if (translation.naturalLanguageFolding === undefined) {
             // generate new natural language
             console.log('generating natural language');
-            generateLanguageResponse(editor.document, foundComplementaryRegion, chosenRegion, 'genNL');
+            generateLanguageResponse(document, translation, 'genNL');
         } else {
             // update natural language
             console.log('updating natural language');
-            generateLanguageResponse(editor.document, foundComplementaryRegion, chosenRegion, 'updateNL');
+            generateLanguageResponse(document, translation, 'updateNL');
         }
-    } else if ( openingCodeRegion) {
-        // Update Code
-        console.log('updating code');
-        generateLanguageResponse(editor.document, foundComplementaryRegion, chosenRegion, 'updateCode');
-    } else if (closingLanguageRegion){
-        if (foundComplementaryRegion === undefined) {
+    } else if (openingCodeRegion || closingLanguageRegion) {
+        if (translation.codeFolding === undefined) {
             // Generate Code
             console.log('generating code');
-            generateLanguageResponse(editor.document, chosenRegion, foundComplementaryRegion, 'genCode');
+            generateLanguageResponse(document, translation, 'genCode');
         } else {
             // Update Code
             console.log('updating code');
-            generateLanguageResponse(editor.document, chosenRegion, foundComplementaryRegion, 'updateCode');
+            generateLanguageResponse(document, translation, 'updateCode');
         }
     }
-    
-    const transformToRange = foldingRangeToRange(editor.document);
-    if (lastFoldingAction === 'wasFolded' && foundComplementaryRegion !== undefined && FoldedLinesManager.isFolded(transformToRange(foundComplementaryRegion),editor) === true) {
-        console.log('complementary region unfolds');
-        commands.executeCommand('editor.unfold', { selectionLines: [foundComplementaryRegion?.start] });
-        ManipulatedFoldManager.setCommandInvoked(editor, true);
-    } else if (lastFoldingAction === 'wasUnfolded' && foundComplementaryRegion !== undefined && FoldedLinesManager.isFolded(transformToRange(foundComplementaryRegion),editor) === false) {
-        console.log('complementary region folds');
-        commands.executeCommand('editor.fold', { selectionLines: [foundComplementaryRegion?.start] });
-        ManipulatedFoldManager.setCommandInvoked(editor, true);
-    }
         
-    
-    FoldedLinesManager.updateFoldedLines(editor);
- //   ManipulatedFoldManager.updateFoldedLines(editor, regionRangesProvider);
 }
 
-function createFoldTranslationsMap(foldingRanges: BetterFoldingRange[]): Map<number, FoundLanguageTranslation> {
+function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFoldedLine, complementaryRegion: BetterFoldingRange | undefined){
+    if(!config.getAutomaticFolding()){
+        return;
+    }
+    if(complementaryRegion === undefined ){
+        return;
+    }
+    const transformToRange = foldingRangeToRange(editor.document);
+    if (lastFolding.lastFoldingAction === 'wasFolded' && FoldedLinesManager.isFolded(transformToRange(complementaryRegion), editor) === true) {
+        console.log('complementary region unfolds');
+        commands.executeCommand('editor.unfold', { selectionLines: [complementaryRegion?.start] });
+        ManipulatedFoldManager.setCommandInvoked(editor, true);
+    } else if (lastFolding.lastFoldingAction === 'wasUnfolded' && FoldedLinesManager.isFolded(transformToRange(complementaryRegion), editor) === false) {
+        console.log('complementary region folds');
+        commands.executeCommand('editor.fold', { selectionLines: [complementaryRegion?.start] });
+        ManipulatedFoldManager.setCommandInvoked(editor, true);
+    }
+}
+
+function wasTranslationUpdated(provider: SnapshotProvider, document: TextDocument, translation: LanguageTranslation) : boolean {
+    if(translation.codeFolding === undefined || translation.naturalLanguageFolding === undefined){
+        return true;
+    }
+    const snapshotContent = provider.getSnapshotContentFor(document.uri);
+    const documentContent = document.getText();
+    
+    if (snapshotContent === undefined) {
+        return true;
+    }
+        
+    const snapshotLines = snapshotContent.split(/\r?\n/);
+    const documentLines = documentContent.split(/\r?\n/);
+    const snapshotTranslation = snapshotLines.slice(translation.naturalLanguageFolding.start, translation.codeFolding.end + 1);
+    const documentTranslation = documentLines.slice(translation.naturalLanguageFolding.start, translation.codeFolding.end + 1);
+    if(JSON.stringify(snapshotTranslation) === JSON.stringify(documentTranslation)){
+        return false;
+    }
+    return true;
+}
+
+function findCouples(foldingRanges: BetterFoldingRange[]): NaturalLanguageRegionCouple[] {
     const codeRanges = foldingRanges.filter(range => range.foldingType === 'code');
     const naturalLanguageRanges = foldingRanges.filter(range => range.foldingType === 'natural language');
     const relations = pairByRelation(naturalLanguageRanges, codeRanges, (nlRange, codeRange) => nlRange.end + 1 === codeRange.start);
+    const couples: NaturalLanguageRegionCouple[] = [];
+    for(const relation of relations){
+        couples.push({
+            naturalLanguageFolding: relation.a,
+            codeFolding: relation.b,
+            nesting: relation.b?.nestingLevel
+        });
+    }
+    return couples;
+}
 
-    const foldMap: Map<number, FoundLanguageTranslation> = new Map();
-    for (const relation of relations) {
-        if (relation.a !== undefined) {
+function createFoldTranslationsMap(foldingRanges: BetterFoldingRange[]): Map<number, LanguageTranslation> {
+    const couples = findCouples(foldingRanges);
+
+    const foldMap: Map<number, LanguageTranslation> = new Map();
+    for (const relation of couples) {
+        if (relation.naturalLanguageFolding !== undefined) {
             foldMap.set(
-                relation.a.start, {
-                hasFolded: 'code',
-                codeFolding: relation.a,
-                naturalLanguageFolding: relation.b
-            }
+                relation.naturalLanguageFolding.start, {
+                    hasFolded: 'natural language',
+                    naturalLanguageFolding: relation.naturalLanguageFolding,
+                    codeFolding: relation.codeFolding
+                }
             );
         }
-        if (relation.b !== undefined) {
+        if (relation.codeFolding !== undefined) {
             foldMap.set(
-                relation.b.start, {
-                hasFolded: 'natural language',
-                codeFolding: relation.a,
-                naturalLanguageFolding: relation.b
-            }
+                relation.codeFolding.start, {
+                    hasFolded: 'code',
+                    naturalLanguageFolding: relation.naturalLanguageFolding,
+                    codeFolding: relation.codeFolding
+                }
             );
         }
     }
     return foldMap;
 }
-
-
-/*
-}
-
-export default FoldingManager.instance;
-*/

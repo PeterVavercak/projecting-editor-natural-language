@@ -1,6 +1,5 @@
 import { FoldingRange, FoldingRangeKind, TextEditorDecorationType, Range } from "vscode";
-import Bracket from "./bracket-pair-colorizer-2 src/bracket";
-import Token from "./bracket-pair-colorizer-2 src/token";
+
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 
 export interface RegionNode {
@@ -21,7 +20,7 @@ export interface LineRegionNode {
   endLine?: number;
   children: LineRegionNode[];
   parent?: LineRegionNode;
-  content?: string;
+  nestingLevel? : number;
 }
 
 export interface BetterFoldingRange extends FoldingRange {
@@ -31,34 +30,49 @@ export interface BetterFoldingRange extends FoldingRange {
   kind?: FoldingRangeKind;
   collapsedText?: string;
   id?: number | null;
-  content?:  string
+  nestingLevel?: number;
   foldingType?: 'code' | 'natural language';
 }
 
+export interface RegionTokens {
+  start: string;
+  end: string;
+  lineComment?: string;
+}
 
-export interface FoundLanguageTranslation{
+
+
+export interface LanguageTranslation {
   hasFolded: 'code' | 'natural language';
   codeFolding?: BetterFoldingRange;
-  naturalLanguageFolding?: BetterFoldingRange; 
+  naturalLanguageFolding?: BetterFoldingRange;
 }
 
-export interface TokenizedDocument {
-  brackets: Bracket[];
-  tokens: Token[];
+
+
+export interface NaturalLanguageRegionCouple {
+  nesting?: number;
+  codeFolding?: BetterFoldingRange;
+  naturalLanguageFolding?: BetterFoldingRange;
 }
+
+
 
 
 export interface LastFoldedLine {
   lastFoldingAction: 'wasUnfolded' | 'wasFolded';
   foldingLine: number;
-} 
+}
 
 export type VisibleState = {
   ranges: readonly Range[];
   docVersion: number;
 };
 
-
+export type TreeNode<T> = {
+  value: T;
+  children: TreeNode<T>[];
+};
 
 export type ProvidersList = [selector: string, provider: BetterFoldingRangeProvider][];
 

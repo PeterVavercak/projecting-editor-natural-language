@@ -2,7 +2,8 @@
 Encodes a character into its binary representation as a list of boolean values.
 
 - Converts the character to its ASCII/Unicode code point.
-- Represents the code point as an 8-bit binary number, where each bit is stored as a boolean value in a list.
+- Represents the code point as an 8-bit binary number, where each bit is stored as a boolean value in a list, 
+  with the least significant bit at the end of the list and the most significant bit at the start.
 
 Parameters:
 - `character`: A single character to be encoded.
@@ -21,20 +22,7 @@ def encode_char(character: str) -> List[bool]:
 #endregion
 
 """nlregion
-Function to encode a string into a list of boolean lists  
-----  
-- A null character ("\x00") is appended to the input string.  
-- Each character in the modified string is encoded into a list of boolean values.  
-- The encoding of each character is performed using the `encode_char` function.  
-
-----  
-Parameters:  
-- string: The input string to be encoded.  
-
-----  
-Returns:  
-- A list of boolean lists representing the encoded string.  
-----  
+Encodes a string into a 2D list of boolean values, with each character represented as a list of booleans.
 endnlregion"""
 #region
 def encode_string(string: str) -> List[List[bool]]:
@@ -46,8 +34,7 @@ def encode_string(string: str) -> List[List[bool]]:
 #endregion
 
 """nlregion
-----
-Function to convert a 2D array of bytes into blocks of boolean values
+Function to convert a 2D array of boolean values into blocks of boolean values  
 ----
     - Initializes a 2D list `blocks` with `False` values.
     - Iterates through columns and rows to populate `blocks` based on `bytes_arr`.
@@ -69,7 +56,6 @@ def bytes_to_blocks(cols: int, offset: int, rows: int, bytes_arr: List[List[bool
 
     for i in range(cols):
         for j in range(offset * 8):
-            blocks[j][i] = False
             idx = i + cols * (j // 8)
             if idx < rows:
                 blocks[j][i] = bytes_arr[idx][j % 8]

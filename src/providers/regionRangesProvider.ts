@@ -1,27 +1,8 @@
-import { TextDocument, FoldingRangeKind, WorkspaceEdit, workspace, Position } from "vscode";
-import { BetterFoldingRange, LineRegionNode, RegionNode } from "../types";
-import * as config from "../configuration";
+import { TextDocument, FoldingRangeKind} from "vscode";
+import { BetterFoldingRange, LineRegionNode} from "../types";
 import BetterFoldingRangeProvider from "./betterFoldingRangeProvider";
-import { getAllIds, pairByRelation } from '../utils/classes/functions/utils';
 
-
-//const REGION_REGEX = /#region (.*)\r?\n(?:.|\n)*?#endregion/g;
-//const REGION_REGEX = /#region (.*?)\r?\n([\s\S]*?)#endregion/g;
-//const REGION_REGEX = /#region (.*?)\r?\n([\s\S]*?)#endregion(?:\s*(\d+))?/g;
-const REGION_REGEX = /#region(?:\s+(.*?))?\r?\n([\s\S]*?)#endregion(?:\s*(\d+))?/g;
-//const REGION_REGEX = /^\s*#region\b(.*)\r?\n[\s\S]*?^\s*#endregion\b/gm;
-const NL_REGION_REGEX = /"""nlregion\r?\n([\s\S]*?)endnlregion"""/g;
-
-
-
-
-
-
-//const TOKEN_REGEX = /#region(?:\s+(.*?))?\r?\n|#endregion(?:\s*(\d+))?/g;
-const TOKEN_REGEX = /(?:#|\/\/)\s*#?region(?:\s+(.*?))?\r?\n|(?:#|\/\/)\s*#?endregion(?:\s*(\d+))?/g;
-
-
-
+const NL_REGION_REGEX = /[ \t]*("""|\/\*)nlregion\r?\n([\s\S]*?)[ \t]*endnlregion("""|\*\/)/g;
 
 export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
@@ -44,9 +25,8 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
         ranges.push({
           start: startPosition.line,
           end: endPosition.line,
-          kind: FoldingRangeKind.Region,
+          kind: FoldingRangeKind.Comment,
           startColumn: document.lineAt(startPosition.line).firstNonWhitespaceCharacterIndex,
-          content: match[1],
           foldingType
         });
       }
@@ -61,20 +41,7 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
     ranges.push(...this.calculateRangesForRegex(document, NL_REGION_REGEX, 'natural language'));
     return ranges;
   }
-/*
-  public getCouples(document: TextDocument): LanguageTranslation[] {
-    const codeRanges = this.calculateRangesForRegex(document, REGION_REGEX, 'code');
-    const naturalLanguageRanges = this.calculateRangesForRegex(document, NL_REGION_REGEX, 'natural language');
-    const relations = pairByRelation(naturalLanguageRanges, codeRanges, (nlRange, codeRange) => nlRange.end + 1 === codeRange.start);
 
-    const translations: LanguageTranslation[] = relations.map(r => ({
-      codeFolding: r.a,
-      naturalLanguageFolding: r.b
-    }));
-    return translations;
-
-  }
-    */
   private buildFoldingRanges(document: TextDocument): BetterFoldingRange[] {
     const regions = this.parseNestedRegionsByLines(document);
     //console.log('get nested regions');
@@ -91,9 +58,9 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
               start: node.startLine,
               end: node.endLine,
               kind: FoldingRangeKind.Region,
-              content: node.content,
               startColumn: document.lineAt(node.startLine).firstNonWhitespaceCharacterIndex,
-              foldingType: 'code'
+              foldingType: 'code',
+              nestingLevel: node.nestingLevel
             }
           );
         }
@@ -116,13 +83,14 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
     const line = lines[i].trim();
 
     if (/^(?:\/\/\s*)?#region\b/i.test(line)) {
-      const name = line.slice("#region".length).trim() || undefined;
+      const name = line.replace(/^(?:\/\/\s*)?#region\b/i, "").trim() || undefined;
 
       const node: LineRegionNode = {
         name,
         startLine: i,
         children: [],
         parent: stack[stack.length - 1],
+        nestingLevel: stack.length,
       };
 
       if (stack.length === 0) {
@@ -140,14 +108,6 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
       }
 
       current.endLine = i;
-
-      if (current.startLine + 1 <= i - 1) {
-        current.content = lines
-          .slice(current.startLine + 1, i)
-          .join("\n");
-      } else {
-        current.content = "";
-      }
     }
     
   }
@@ -158,29 +118,7 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
 
 
-  private writeIds(document: TextDocument, ranges: BetterFoldingRange[]) {
-    const edit = new WorkspaceEdit();
 
-    const iDs = getAllIds(ranges);
-
-
-    for (const range of ranges) {
-      if (range.id === 0) {
-        const newId = Math.max(...iDs) + 1;
-        iDs.push(newId);
-        range.id = newId;
-        // console.log('ID written: ' + newId);
-        edit.insert(
-          document.uri,
-          new Position(range.end, document.lineAt(range.end).text.length),
-          ' ' + newId.toString()
-        );
-
-      }
-    }
-    workspace.applyEdit(edit);
-
-  }
 }
 
 

@@ -5,24 +5,18 @@ import * as vscode from 'vscode';
 import { SnapshotProvider, SNAPSHOT_SCHEME } from "./ContentProvider";
 import { registerSnapshotCommands } from "./comands";
 
-import { commands, ExtensionContext, languages, window, workspace, FoldingRangeProvider, Uri } from "vscode";
-import { BracketRangesProvider } from "./providers/bracketRangesProvider";
+import { commands, ExtensionContext, languages, window, workspace, Uri } from "vscode";
 import { CLEAR_ZEN_FOLDS_COMMAND, CONFIG_ID, CREATE_ZEN_FOLDS_COMMAND } from "./constants";
 import FoldingDecorator from "./decorators/foldingDecorator";
 import * as config from "./configuration";
 import RegionRangesProvider from "./providers/regionRangesProvider";
-import JsxRangesProvider from "./providers/jsxRangesProvider";
 import FoldedLinesManager from "./utils/classes/foldedLinesManager";
 import ManipulateFoldManager from "./utils/classes/manipulateFoldManager";
 
-import ZenFoldingDecorator from "./decorators/zenFoldingDecorator";
 import { ProvidersList, VisibleState } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 //import RegionCodeLensProvider from './providers/regionCodeLensProvider';
-import BetterCodeLensProvider from './providers/betterCodeLensProvider';
-import NaturalLanguageRegionRangesProvider from './providers/naturalLangugeRegionProvider';
-import { getRanges } from './utils/classes/functions/utils';
-import { getConfiguredLanguageModel } from './configuration';
+
 import { openComplementaryRegion } from './utils/classes/foldingManager';
 import ExtendedMap from './extendedMap';
 
@@ -30,10 +24,7 @@ import ExtendedMap from './extendedMap';
 const regionRangesProvider = new RegionRangesProvider();
 
 const foldingProviders: ProvidersList = [
-  //  ["*", new BracketRangesProvider()],
   ["*", regionRangesProvider],
-  ["javascriptreact", new JsxRangesProvider()],
-  ["typescriptreact", new JsxRangesProvider()],
 ];
 
 
@@ -44,15 +35,13 @@ const foldingProviders: ProvidersList = [
 
 
 let foldingDecorator = new FoldingDecorator(foldingProviders);
-let zenFoldingDecorator = new ZenFoldingDecorator();
 
 const registeredLanguages = new Set<string>();
 
-const lastVisibleState: ExtendedMap<Uri, VisibleState | undefined> = new ExtendedMap(() => undefined);
 const recentlyEditedDocs: ExtendedMap<Uri, number> = new ExtendedMap(() => -1);
 
 
-let provider: SnapshotProvider | undefined;
+const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -76,18 +65,17 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   //  console.log('is working');
-  provider = new SnapshotProvider();
   context.subscriptions.push(
-    provider,
-    vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, provider),
-    ...registerSnapshotCommands(provider)
+    snapshotProvider,
+    vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshotProvider),
+    ...registerSnapshotCommands(snapshotProvider, foldingProviders)
   );
 
   for (const doc of vscode.workspace.textDocuments) {
     if (doc.uri.scheme !== "file") continue;
     if (doc.isUntitled) continue;
 
-    provider.saveFromDocument(doc);
+    snapshotProvider.saveFromDocument(doc);
   }
 
   context.subscriptions.push(
@@ -98,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (doc.isUntitled) { return; }
       if (doc.isClosed) { return; }
 
-      provider?.saveFromDocument(doc); // stores content in Map
+      snapshotProvider?.saveFromDocument(doc); // stores content in Map
     })
   );
 
@@ -107,7 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidCloseTextDocument(doc => {
       if (doc.uri.scheme !== "file") return;
 
-      provider?.deleteSnapshotFor(doc.uri);
+      snapshotProvider?.deleteSnapshotFor(doc.uri);
     })
   );
 
@@ -154,7 +142,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 
       FoldedLinesManager.updateFoldedLines(e.textEditor);
-      const regionRanges = regionRangesProvider.getRanges(e.textEditor.document);
       ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, regionRangesProvider);
 
       if (!ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
@@ -171,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
 
-      openComplementaryRegion(e.textEditor, regionRangesProvider);
+      openComplementaryRegion(e.textEditor, regionRangesProvider, snapshotProvider);
       //  zenFoldingDecorator.triggerUpdateDecorations(e.textEditor);
       //  foldingDecorator.triggerUpdateDecorations(e.textEditor);
       /*
@@ -182,32 +169,13 @@ export function activate(context: vscode.ExtensionContext) {
             */
     }),
 
-    commands.registerCommand(CREATE_ZEN_FOLDS_COMMAND, () => zenFoldingDecorator.createZenFoldsAroundSelection()),
-    commands.registerCommand(CLEAR_ZEN_FOLDS_COMMAND, () => zenFoldingDecorator.clearZenFolds())
+
   );
   registerProviders(context);
   updateAllDocuments();
 
 
 }
-
-function isLikelyScroll(
-  oldRanges: readonly vscode.Range[],
-  newRanges: readonly vscode.Range[]
-): boolean {
-  if (oldRanges.length !== newRanges.length) return false;
-
-  // pri obyčajnom scrolli sa typicky celý viewport len posunie
-  const oldSize = oldRanges.map(r => r.end.line - r.start.line);
-  const newSize = newRanges.map(r => r.end.line - r.start.line);
-
-  for (let i = 0; i < oldRanges.length; i++) {
-    if (oldSize[i] !== newSize[i]) return false;
-  }
-
-  return true;
-}
-
 
 
 function registerProviders(context: ExtensionContext) {
@@ -232,11 +200,6 @@ function registerProviders(context: ExtensionContext) {
 
 
 
-function registerCodeLensProvider(context: ExtensionContext, selector: string, provider: BetterCodeLensProvider) {
-  setTimeout(() => {
-    context.subscriptions.push(languages.registerCodeLensProvider(selector, provider));
-  }, 2000);
-}
 
 
 // Courtesy of vscode-explicit-fold,
@@ -276,8 +239,7 @@ function restart() {
 
 // This method is called when your extension is deactivated
 export function deactivate() {
-  provider?.dispose();
-  provider = undefined;
-  //  foldingDecorator.dispose();
+  snapshotProvider?.dispose();
+  foldingDecorator.dispose();
   //  zenFoldingDecorator.dispose();
 }

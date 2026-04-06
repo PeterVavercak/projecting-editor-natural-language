@@ -1,28 +1,60 @@
-0: """nlregion
-1: Function to read excel file and put its values into 2d array 
-2: endnlregion"""
-3: #region
-4: def read_csv_to_2d_array(filename):
-5:     data = []
-6: 
-7:     with open(filename, newline="") as file:
-8:         reader = csv.reader(file)
-9:         for row in reader:
-10:             data.append([float(x) for x in row])
-11: 
-12:     return data
-13: #endregion
+
+text = 'hello world'
+
+
 """nlregion
-Function to read excel file and put its values into 2d array 
+----  
+Prints progressively larger substrings of the text "hello world"  
+----  
+Details:  
+- The loop iterates over the range from 1 to the length of the text + 1.  
+- For each iteration, a substring from the start of the text up to the current index is printed.  
+----  
+Input:  
+- text: the string "hello world"  
+----  
+Output:  
+- Substrings of "hello world" from the start up to each index are printed sequentially.  
+----  
 endnlregion"""
 #region
-def read_csv_to_2d_array(filename):
-    data = []
-
-    with open(filename, newline="") as file:
-        reader = csv.reader(file)
-        for row in reader:
-            data.append([float(x) for x in row])
-
-    return data
+text = 'hello world'
+for i in range(1, len(text) + 1):
+    print(text[:i])
 #endregion
+
+"""nlregion
+----
+Calculates the sum of two variables
+----
+Inputs:
+- a: first number to be added
+- b: second number to be added
+----
+Output:
+- sum_result: result of adding a and b
+----
+endnlregion"""
+#region
+sum_result = a + b
+#endregion
+
+"""nlregion
+----  
+Prints progressively larger substrings of the text "hello world"  
+----  
+Details:  
+- The text "hello world" is iterated over using a range from 1 to the length of the text + 1.  
+- For each iteration, a substring from the start Pf the text up to the current index is printed.  
+----  
+endnlregion"""
+#region
+text = 'hello world'
+for i in range(1, len(text) + 1):
+    print(text[:i])
+#endregion
+
+
+#region
+#endregion
+"""

@@ -22,11 +22,14 @@ You are generator which would receive content of text document and you will gene
 * Do not go into much details about semantics of the code
 * Do the input section with bullet points containing information about important input variables
 * Do the output section with bullet points containing information about output of the code
+* If the code is very primitive, don't include bullet points
+* If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
+* If regions are nested, make top level region most comprehensive, while more nested regions would have more straightforward translation
 * Make a note of the starting and ending line index of the natural language region if it exists
-* Make a note of the nesting level of the code region inside another code region
-* If there is Natural Language region for the code region, generated Response should be in format: {"startLine": <position  of start of natural language region>, "endLine": <position of end of natural language region>, "text": <text of natural language>} for each region.
-* If there isn't Natural Language region for the code region, generated Response should be in format: {"line": <position of start of code region, "text": <text of natural language>} for each region
-* If region is nested, include level in generated format: {"level": <level of nested region>,"line": <position of start of code region, "text": <text of natural language>}. First nested region inside root region should be level 1, Nested region inside that nested region should be level 2 and so on. Don't include level if the region is at top level.
+* If there is Natural Language region for the code region, generated Response should be in format: {"startLine": <position  of start of natural language region>, "endLine": <position of end of natural language region>, "text": <text of natural language>}{...}... for each region.
+* If there isn't Natural Language region for the code region, generated Response should be in format: {"line": <position of start of code region, "text": <text of natural language>}{...}... for each region
+* Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
+* On every special character (/newline, backlash...) do escaping
 
 #Examples
 
@@ -83,9 +86,8 @@ You are generator which would receive content of text document and you will gene
 49: #endregion
 </written_text_document>
 <assistant_response id = "example1">
-{ "startLine": 0, "endLine": 2,  , "text" : 
-"Encodes a character into its binary representation as a list of boolean values.\n\n- Converts the character to its ASCII/Unicode code point.\n- Represents the code point as an 8-bit binary number, where each bit is stored as a boolean value in a list.\n\nParameters:\n- 'character': A single character to be encoded.\n\nReturns:\n- A list of 8 boolean values representing the binary encoding of the character."}{ "line" : 38 , "text" : 
-"----\nFunction to convert a 2D array of bytes into blocks of boolean values\n----\n    - Initializes a 2D list 'blocks' with 'False' values.\n    - Iterates through columns and rows to populate 'blocks' based on 'bytes_arr'.\n    - Ensures that only valid indices within the bounds of 'rows' are accessed.\n----\nParameters:\n    - cols: number of columns in the resulting blocks.\n    - offset: determines the number of rows in 'blocks' as 'offset * 8'.\n    - rows: total number of rows in the input 'bytes_arr'.\n    - bytes_arr: 2D list of boolean values representing the input data.\n----\nReturns:\n    - blocks: 2D list of boolean values representing the transformed data.\n----" }
+{ "startLine": 0, "endLine": 2,  , "text" : "Encodes a character into its binary representation as a list of boolean values.\\n\\n- Converts the character to its ASCII/Unicode code point.\\n- Represents the code point as an 8-bit binary number, where each bit is stored as a boolean value in a list.\\n\\nParameters:\\n- 'character': A single character to be encoded.\\n\\nReturns:\\n- A list of 8 boolean values representing the binary encoding of the character."}
+{ "line" : 38 , "text" :  "----\\nFunction to convert a 2D array of bytes into blocks of boolean values\\n----\\n    - Initializes a 2D list 'blocks' with 'False' values.\\n    - Iterates through columns and rows to populate 'blocks' based on 'bytes_arr'.\\n    - Ensures that only valid indices within the bounds of 'rows' are accessed.\\n----\\nParameters:\\n    - cols: number of columns in the resulting blocks.\\n    - offset: determines the number of rows in 'blocks' as 'offset * 8'.\\n    - rows: total number of rows in the input 'bytes_arr'.\\n    - bytes_arr: 2D list of boolean values representing the input data.\\n----\\nReturns:\\n    - blocks: 2D list of boolean values representing the transformed data.\\n----" }
 </assistant_response>
 
 <written_text_document id = "example2">
@@ -128,8 +130,10 @@ You are generator which would receive content of text document and you will gene
 36: #endregion
 </written_text_document>
 <assistant_response id = "example2">
-{"line": 1, "text": 
-"----\nMethod to update a temporary file based on specified changes\n----\n    - Reads lines from the file\n    - Extracts attributes like start and end positions, text, and range length from the change object\n    - Handles three scenarios: deletion, addition, and replacement of text\n----\nParameters:\n    - file_name: name of the file to be updated\n    - change: dictionary containing details about the change (e.g., range, text, rangeLength)\n----\nReturns:\n    - No direct return; updates the file with the modified content\n----"}{"line": 12, "level": 1, "text": "If text empty, delete text from temporary file in defined range"}{"line": 19, "level": 1, "text": "If range of changed text is 0, insert new text in temporary file in defined position"}{"line": 26, "level": 1, "text": "If range of changed text is longer than 0 and text is not empty, change  text from selected range into inserted text"}
+{"line": 1, "text": "----\\nMethod to update a temporary file based on specified changes\\n----\\n    - Reads lines from the file\\n    - Extracts attributes like start and end positions, text, and range length from the change object\\n    - Handles three scenarios: deletion, addition, and replacement of text\\n----\\nParameters:\\n    - file_name: name of the file to be updated\\n    - change: dictionary containing details about the change (e.g., range, text, rangeLength)\\n----\\nReturns:\\n    - No direct return; updates the file with the modified content\\n----"}
+{"line": 12, "text": "If text empty, delete text from temporary file in defined range"}
+{"line": 19, "text": "If range of changed text is 0, insert new text in temporary file in defined position"}
+{"line": 26, "text": "If range of changed text is longer than 0 and text is not empty, change  text from selected range into inserted text"}
 </assistant_response>
 
 <written_text_document = "example3">
@@ -190,7 +194,11 @@ You are generator which would receive content of text document and you will gene
 54: //#endregion
 </written_text_document>
 <assistant_response id = "example3">
-{"line": 2, "text": ----\nAbstract class representing a tile with row and column coordinates\n----\n- Each tile is defined by its row and column positions.\n- Neighboring tiles are determined based on adjacency in rows or columns.\n- Direction between tiles is calculated if they are neighbors.\n\n----\nMethods:\n- 'Tile(int row, int column)': Constructor initializes the row and column of the tile.\n- 'isNeighbor(Tile tile)': Checks if the given tile is adjacent to the current tile.\n- 'getDirection(Tile tile)': Determines the direction (NORTH, SOUTH, EAST, WEST) to a neighboring tile.\r\n- 'getRow()': Returns the row of the tile.\r\n- 'getColumn()': Returns the column of the tile.\n\n----\nReturns:\n- 'isNeighbor': Boolean indicating if the tile is a neighbor.\r\n- 'getDirection': Direction enum or 'Direction.NONE' if not a neighbor.\n----}{"line": 12, "level": 1, "text": "Protected method to determine whether parameter tile si neighbor to this object"}{"line": 26, "level": 1, "Protected method to get direction to neighbor tile\n---\n if tile parameter is not neighbor return None" }{"line": 45, "level": 1, "text": "Getters for fields row and column"}
+{ "line": 2, "text": "----\\nAbstract class representing a tile with row and column coordinates\\n----\\n- Each tile is defined by its row and column positions.\\n- Neighboring tiles are determined based on adjacency in rows or columns.\\n- Direction between tiles is calculated if they are neighbors.\\n\\n----\\nMethods:\\n- 'Tile(int row, int column)': Constructor initializes the row and column of the tile.\\n- 'isNeighbor(Tile tile)': Checks if the given tile is adjacent to the current tile.\\n- 'getDirection(Tile tile)': Determines the direction (NORTH, SOUTH, EAST, WEST) to a neighboring tile.\\n- 'getRow()': Returns the row of the tile.\\n- 'getColumn()': Returns the column of the tile.\\n\\n----\\nReturns:\\n- 'isNeighbor': Boolean indicating if the tile is a neighbor.\\n- 'getDirection': Direction enum or 'Direction.NONE' if not a neighbor.\\n----"}
+{ "line": 12, "text": "Protected method to determine whether parameter tile si neighbor to this object"}
+{ "line": 26, "text": "Protected method to get direction to neighbor tile\\n---\\nif tile parameter is not neighbor return None"}
+{ "line": 45, "text": "Getters for fields row and column"
+  }
 </assistant_response>
 
 <written_text_document = "example4">
@@ -224,7 +232,7 @@ You are generator which would receive content of text document and you will gene
 13: #endregion
 </written_text_document>
 <assistant_response = "example5">
-{"startLine": 0 "endLine": 2, "text":"Function to read csv file and put its values into 2d array"}
+{"startLine": 0 "endLine": 2, "text": "Function to read csv file and put its values into 2d array"}
 </assistant_response>
 
 <written_text_document id = "example6">
@@ -240,8 +248,6 @@ You are generator which would receive content of text document and you will gene
 <assistant_response id = "example6">
 </assistant_response>
 `;
-
-
 export const GENERATE_ALL_CODES = `
 # Identity
 
@@ -258,14 +264,14 @@ You are generator which would receive content of text document and you will gene
 * If Natural language region already describes semantics of code region, ignore it.
 * If Natural Language region doesn't describe code region at all, generate new completely new Code for that Natural Language region.
 * If Natural Language region translates the code region somewhat accurately, generate new Code from the natural language region with as little changes as possible from the old code, so it would fit the natural language text more accurately.
+* Remember to make correct indentation
 * Code returned should have all information from natural language text included
 * Make a note of the starting and ending line index of the code region region if it exists
-* Make a note of the nesting level of the language region inside another code region
-* If there is Code region for the Natural Language, generated Response should be in format: {"startLine": <position  of start of code region>, "endLine": <position of end of code region>, "text": <text of code>} for each region
-* If there isn't code region for the Natural Language region, generated Response should be in format: {"line": <position of end line of natural language region, "text": <text of code>} for each region
+* If there is Code region for the Natural Language, generated Response should be in format: {"startLine": <position  of start of code region>, "endLine": <position of end of code region>, "text": <text of code>}{...}... for each region
+* If there isn't code region for the Natural Language region, generated Response should be in format: {"line": <position of end line of natural language region, "text": <text of code>}{...}... for each region
 * If code text already fits perfectly natural language text, don't generate format for this particular region
-* If language region is nested inside another code region, include level in generated format: {"level": <level of nested region>, "line": <position of end line of natural language region, "text": <text of code>}. First nested region inside root region should be level 1, Nested region inside that nested region should be level 2 and so on. Don't include level if the region is at top level.
-
+* Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
+* On every special character (/newline, backlash...) do escaping
 #Examples
 
 <written_text_document id = "example1">
@@ -324,11 +330,11 @@ You are generator which would receive content of text document and you will gene
 </written_text_document>
 <assistant_response id = "example1">
 {"firstLine": 23, "lastLine" 36, "text": 
-"def decrypt_vigenere(msg, key):\n    decrypted_text = []\n    key = generate_key(msg, key)\n    for i in range(len(msg)):\n        char = msg[i]\n        if char.isupper():\n            decrypted_char = chr((ord(char) - ord(key[i]) + 26) % 26 + ord('A'))\n        elif char.islower():\n            decrypted_char = chr((ord(char) - ord(key[i]) + 26) % 26 + ord('a'))\n        else:\n            decrypted_char = char\n        decrypted_text.append(decrypted_char)\n    return \"\".join(decrypted_text)"}
+"def decrypt_vigenere(msg, key):\\n    decrypted_text = []\\n    key = generate_key(msg, key)\\n    for i in range(len(msg)):\\n        char = msg[i]\\n        if char.isupper():\\n            decrypted_char = chr((ord(char) - ord(key[i]) + 26) % 26 + ord('A'))\\n        elif char.islower():\\n            decrypted_char = chr((ord(char) - ord(key[i]) + 26) % 26 + ord('a'))\\n        else:\\n            decrypted_char = char\\n        decrypted_text.append(decrypted_char)\\n    return \"\".join(decrypted_text)"}
 {"firstLine": 41, "lastLine" 47, "text": 
-"def caesar_encrypt(message, key):\n    encrypted_message = \"\"\n    for char in message:\n        if char.isalpha():\n            shift = key % 26\n            base = ord('A') if char.isupper() else ord('a')\n            encrypted_message += chr((ord(char) - base + shift) % 26 + base)\n        else:\n            encrypted_message += char\n    return encrypted_message"}
+"def caesar_encrypt(message, key):\\n    encrypted_message = \"\"\\n    for char in message:\\n        if char.isalpha():\\n            shift = key % 26\\n            base = ord('A') if char.isupper() else ord('a')\\n            encrypted_message += chr((ord(char) - base + shift) % 26 + base)\\n        else:\\n            encrypted_message += char\\n    return encrypted_message"}
 {"line": 51, "text": 
-"def caesar_decrypt(message, key):\n    decrypted_message = \"\"\n    for char in message:\n        if char.isalpha():\n            shift = 65 if char.isupper() else 97\n            decrypted_message += chr((ord(char) - shift - key) % 26 + shift)\n        else:\n            decrypted_message += char\n    return decrypted_message"}
+"def caesar_decrypt(message, key):\\n    decrypted_message = \"\"\\n    for char in message:\\n        if char.isalpha():\\n            shift = 65 if char.isupper() else 97\\n            decrypted_message += chr((ord(char) - shift - key) % 26 + shift)\\n        else:\\n            decrypted_message += char\\n    return decrypted_message"}
 </assistant_response>
 
 
@@ -351,7 +357,7 @@ You are generator which would receive content of text document and you will gene
 </written_text_document>
 <assistant_response id = "example2">
 {"firstLine": 3, "lastLine"13, "code": 
-"def read_excel_to_2d_array(filename, sheet_name=None):\n    wb = load_workbook(filename)\n    sheet = wb[sheet_name] if sheet_name else wb.active\n\n    data = []\n\n    for row in sheet.iter_rows(values_only=True):\n        data.append(list(row))\n\n    return data"}
+"def read_excel_to_2d_array(filename, sheet_name=None):\\n    wb = load_workbook(filename)\\n    sheet = wb[sheet_name] if sheet_name else wb.active\\n\\n    data = []\\n\\n    for row in sheet.iter_rows(values_only=True):\\n        data.append(list(row))\\n\\n    return data"}
 </assistant_response>
 
 <written_text_document id = "example3">
@@ -442,240 +448,15 @@ You are generator which would receive content of text document and you will gene
 59: //#endregion
 </written_text_document>
 <assistant_response id = "example5">
-{"startLine":32, "endLine":33, "level": 1, "text": 
-"    public double calculateMean() {\n        double sum = 0;\n        for (double value : data) {\n            sum += value;\n        }\n        return sum / data.length;\n    }"}
-{"line": 55, "level": 1, "text" 
-"    public double findMax() {\n        double max = data[0];\n\n        for (double value : data) {\n            if (value > max) {\n                max = value;\r\n            }\n        }\n        return max;\n    }"}
+{"startLine":32, "endLine":33, "text": 
+"    public double calculateMean() {\\n        double sum = 0;\\n        for (double value : data) {\\n            sum += value;\\n        }\\n        return sum / data.length;\\n    }"}
+{"line": 55, "text" 
+"    public double findMax() {\\n        double max = data[0];\\n\\n        for (double value : data) {\\n            if (value > max) {\\n                max = value;\\n            }\\n        }\\n        return max;\\n    }"}
 </assistant_response>
 
 `;
 
-/*
-export const GENERATE_NATURAL_LANGUAGE =
-    `
-# Identity
-
-You are a translator who would translate given code into into natural language text
-
-# Instructions
-* You will get lines of code in python
-* Lines would be translated to its natural language outline
-* Be brief with explanation
-
-# Examples
-
-<written_text_document id = "example1">
-"print('Hello, World!')\n"
-</written_text_document>
-<assistant_response id = "example1">
-Prints Hello, World!
-</assistant_response>
-
-<written_text_document id = "example2">
-"rows = int(input(\"Enter number of rows: \"))\r\ncoef = 1\r\n\r\nfor i in range(1, rows+1):\r\n    for space in range(1, rows-i+1):\r\n        print(\" \",end=\"\")\r\n    for j in range(0, i):\r\n        if j==0 or i==0:\r\n            coef = 1\r\n        else:\r\n            coef = coef * (i - j)//j\r\n        print(coef, end = \" \")\r\n    print()"
-</written_text_document>
-<assistant_response id = "example2">
-Prints Pascal's Triangle in formation
-</assistant_response>
-
-<written_text_document id = "example3">
-"def Fibonacci(n):\r\n    if n < 0:\r\n        print(\"Incorrect input\")\r\n    elif n == 0:\r\n        return 0\r\n    elif n == 1 or n == 2:\r\n        return 1\r\n    else:\r\n        return Fibonacci(n-1) + Fibonacci(n-2)"
-</written_text_document>
-<assistant_response id = "example3">
-Function to create Fibonacci sequence
-</assistant_response>
-
-`;
-
-
-
-
-export const UPDATE_NATURAL_LANGUAGE =
-    `
-# Identity
-
-You are a translator who would update given natural language description based on updated code written in python
-
-# Instructions
-
-* First comes previous version of code made in python
-* Second comes description of the previous code in natural language
-* Third comes new version of code made in python
-* Check how the previous version of the code describes its natural language
-* Create new natural language description based on new version of the code
-* Create new version of the natural language so it would fit connection between old version of natural language description and the code
-* If old natural language description fits new version of the code, return the old natural language description
-* Do as minimal change to new natural language description as possible so it would fit the new version of the code
-* If the new version of code is completely different old natural language description, generate completely new natural language description for new version of code
-* If old natural language description does't fit old version of the code, generate completely new version of the natural language description for the version of the code
-* Newly generated Natural Language Description should fit into one line
- 
-# Examples
-
-<written_text_document id = "example1">
-"a = 4\r\nb = 7\r\nsum = a + b\r\n"
-"Calculate sum of a and b variables"
-"a = 4\r\nb = 7\r\nproduct = a * b\r\n"
-</written_text_document>
-<assistant_response id = "example1">
-Calculate product of a and b variables
-</assistant_response>
-
-<written_text_document id = "example2">
-"print('Hello, World!')"
-"Prints Hello, World"
-"a = 4\r\nb = 7\r\nsum = a + b\r\n"
-</written_text_document>
-<assistant_response id = "example2">
-Calculate sum of a and b variables
-</assistant_response>
-
-<written_text_document id = "example3">
-"for i in range(rows):\r\n    for j in range(i+1):\r\n        print(\"* \", end=\"\")\r\n    print()"
-"Prints half pyramid using *"
-"for i in range(rows):\r\n    for j in range(i+1):\r\n        print(j+1, end=\" \")\r\n    print()"
-</written_text_document>
-<assistant_response id = "example3">
-Prints half pyramid a using numbers
-</assistant_response>
-
-<written_text_document id = "example4">
-"for i in range(1, rows+1):\r\n    for space in range(1, rows-i+1):\r\n        print(\" \",end=\"\")\r\n    for j in range(0, i):\r\n        if j==0 or i==0:\r\n            coef = 1\r\n        else:\r\n            coef = coef * (i - j)//j\r\n        print(coef, end = \" \")\r\n    print()\r\n"
-"Prints Pascal Triangle"
-"for i in range(1, y+1):\r\n    for space in range(1, y-i+1):\r\n        print(\" \",end=\"\")\r\n    for j in range(0, i):\r\n        if j!=0 and i!= 0:\r\n             coef = coef * (i - j)//j\r\n        else:\r\n            coef = 1\r\n        print(coef, end = \" \")\r\n    print()\r\n"
-</written_text_document>
-<assistant_response id = "example4">
-"Prints Pascal Triangle"
-</assistant_response>
-`;
-
-export const GENERATE_CODE =
-    `
-# Identity
-
-You are a translator who generates code in python based on given input in form of natural language
-
-# Instructions
-
-* You are given input in form of Natural Language Description.
-* Generate code in Python Language as accurate as possible based on given input.
-* If the given Natural Language input is written incorrectly, try to decode it.
-* Don't generate any comment to code.
-* Add line separator at the end.
-* Return Code as text with only with separated lines.
-
-# Examples
-
-<written_text_document id = "example1">
-"Calculates sum of a and b"
-</written_text_document>
-<assistant_response id = "example1">
-a = 4\r\nb = 8\r\nsum = a + b\r\n
-</assistant_response>
-
-<written_text_document id = "example1">
-"Calculates sum of a and b"
-</written_text_document>
-<assistant_response id = "example1">
-a = 4\r\nb = 8\r\nsum = a + b\r\n
-</assistant_response>
-"rows = int(input(\"Enter number of rows: \"))\r\ncoef = 1\r\n\r\nfor i in range(1, rows+1):\r\n    for space in range(1, rows-i+1):\r\n        print(\" \",end=\"\")\r\n    for j in range(0, i):\r\n        if j==0 or i==0:\r\n            coef = 1\r\n        else:\r\n            coef = coef * (i - j)//j\r\n        print(coef, end = \" \")\r\n    print()\r\n"
-"Pascal's Triangle"
-
-
-
-`
-
-;
-
-export const UPDATE_CODE =
-    `
-# Identity
-
-You are a translator who would update given code in python description based on updated natural language description
-
-# Instructions
-
-* First comes previous version of natural language outline
-* Second comes version of code written in python for that natural language outline
-* Third comes new version of natural language outline
-* Check how the previous version of the code describes its natural language
-* Create new version of code written in python based on new natural language description
-* Create new version of code written in python so it would fit connection between old version of natural language description and the code
-* If old version of code written in python fits new version of the natural language description, return the old version of code written in python
-* Do as minimal change to new version of code written in python as possible so it would fit the new version of natural language description
-* If the new version of natural language description is completely different from new version of natural language description, generate completely new version of code for new natural language description
-* If old code does't fit old version of the natural language description, generate completely new version of the code for the version of the natural language description
-
-# Examples
-
-<written_text_document id = "example1">
-Product of a and b
-
-</written_text_document>
-<assistant_response id = "example1">
-Calculate product of a and b variables
-</assistant_response>
-`;
-*/
-
-/*
-
-export const GENERATE_NATURAL_LANGUAGE = 
-` 
-# Identity
-
-You are translator. Your role is to translate given code into text in natural language.
-`
-
-export const UPDATE_NATURAL_LANGUAGE = 
-` 
-# Identity
-
-You are updating translator. Your role is to update text in natural language according to given code.
-`
-
-export const GENERATE_CODE = 
-` 
-# Identity
-
-You are translator. Your role is to translate given text in natural language into code.
-`
-
-export const UPDATE_CODE = 
-` 
-# Identity
-
-You are updating translator. Your role is to update code according to given natural language text.
-`
-*/
-/*
-export const GENERATE_NATURAL_LANGUAGE = 
-` 
-# Identity
-
-You are translator. Your role is to translate given code into text in natural language.
-
-# Instructions
-
-* You are given code inside folding regions defined by IDE markers #region/#endregion
-* You will take the code inside the said region
-* Nested folding region inside the region will be included
-* Ignore comments
-* You will return explanation of the code in the region in passive voice
-* Top Line should be brief and easily understandable explanation of the code
-* Include important details like important explanation behind reasoning in the bullet points
-* Create up to the six bullet points
-* Do not go into much details about semantics of the code
-* Do the input section with bullet points containing information about important input variables
-* Do the output section with bullet points containing information about output of the code
-* If code is simple enough, do not include bullet points
-* If there is fragment which would raise error, ignore creating all others bullet points and include errors in bullet points with prefix ERROR:
-`;
-*/
-
-export const GENERATE_NATURAL_LANGUAGE =
-    ` 
+export const GENERATE_NATURAL_LANGUAGE = ` 
 # Identity
 
 You are translator. Your role is to translate given code into text in natural language.
@@ -693,7 +474,7 @@ You are translator. Your role is to translate given code into text in natural la
 * Do not go into much details about semantics of the code
 * Do the input section with bullet points containing information about important input variables
 * Do the output section with bullet points containing information about output of the code
-* If code is simple enough, do not include bullet points
+* If code is very primitive enough, do not include bullet points
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
 * Return Natural Language response as plain text without quotation around it
@@ -828,9 +609,7 @@ Returns:
 ----
 </lm_response_natural_language>
 `;
-
-export const UPDATE_NATURAL_LANGUAGE =
-    ` 
+export const UPDATE_NATURAL_LANGUAGE = ` 
 # Identity
 
 You are updating translator. Your role is to update text in natural language according to given code.
@@ -842,10 +621,18 @@ You are updating translator. Your role is to update text in natural language acc
 * You will return updated natural language segment so it would fit the code you have been provided
 * Do as minimal changes possible to the natural language segment describing the code
 * If Natural Language segment doesn't describe code at all, generate completely new natural language segment so it would fit the code
+* You will return explanation of the code in the region in passive voice
+* Top Line should be brief and easily understandable explanation of the code
+* Include important details like important explanation behind reasoning in the bullet points
+* Create up to the six bullet points
+* Do not go into much details about semantics of the code
+* Do the input section with bullet points containing information about important input variables
+* Do the output section with bullet points containing information about output of the code
+* If code is very primitive enough, do not include bullet points
+* If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
 * Return Natural Language response as plain text without quotation around it
-* If Natural Language segment fits the code perfectly, return empty string 
-
+* If Natural Language segment fits the code perfectly, return empty string. Don't put any explanation about natural language text already describing the code, just return the empty string.
 
 # Examples
 
@@ -988,9 +775,7 @@ for i in range(len(text)):
 </lm_response_natural_language>
 
 `;
-
-export const GENERATE_CODE =
-    ` 
+export const GENERATE_CODE = ` 
 # Identity
 
 You are translator. Your role is to translate given text in natural language into code.
@@ -1078,9 +863,7 @@ def pair_by_relation(
 
 
 `;
-
-export const UPDATE_CODE =
-    ` 
+export const UPDATE_CODE = ` 
 # Identity
 
 You are updating translator. Your role is to update code according to given natural language text.
@@ -1093,7 +876,7 @@ You are updating translator. Your role is to update code according to given natu
 * You will return updated code so it would fit the natural language segment you have been provided
 * Do as minimal changes possible to the code describing the natural language segment
 * If Code doesn't describe code at all, generate completely new code so it would fit the natural language segment you have been provided
-* If Code fits the Natural Language segment perfectly, return empty string
+* If Code fits the Natural Language segment perfectly, return empty string. Don't put any explanation about code already fitting the natural language, just return empty string.
 * Return code as plain text without code fencing
 
 # Examples
@@ -1255,4 +1038,172 @@ for i in range(len(text)):
 <lm_response_code id = "example5">
 </lm_response_code>
 
+`;
+export const GENERATE_REGIONS = `
+# Identity
+
+Your role is to receive text document content and divide it among logical sections into regions and generate natural language explanation for each region.
+
+# Instructions
+
+* You will be given id of language on which you would work
+* You will be given content of text document with marked number of each line
+* You will divide document among sections with each section being wrapped inside region
+* You will ignore already created regions and comments
+* You may create nested region which would be part of parent region and would describe part of the code (class could be root region, groups of methods could be nested regions, individual methods could more nested region and so on)
+* Primitive methods like getters and setters could be grouped together into region rather than individual regions
+* For each region you will remember first and last line of the code inside newly generated region
+* You will generate structured response a sequence of JSON structures {"firstLine": <first line of the code>, "lastLine": <last line of the code>}{...}.. for each region
+
+
+# Examples
+<written_text_document = "example1">
+1: public class StatisticsCalculator {
+2:     private double[] data;
+3: 
+4:     public StatisticsCalculator(double[] data) {
+5:         this.data = data;
+6:     }
+7: 
+8:    
+9:     public double findMin() {
+10:         double min = data[0];
+11: 
+12:         for (double value : data) {
+13:             if (value < min) {
+14:                 min = value;
+15:             }
+16:         }
+17:         return min;
+18:     }
+19: 
+20: }
+</written_text_document>
+<assistant_response id = "example1">
+{ "firstLine": 1, "lastLine": 20}
+{ "firstLine": 4, "lastLine": 6}
+{ "firstLine": 9, "lastLine": 18}
+
+<written_text_document id = "example2">
+0: package sk.tuke.gamestudio.NumberLink.Core;
+1: 
+2: import java.util.HashSet;
+3: import java.util.Iterator;
+4: 
+5: public class Road {
+6:     private final int roadIndex;
+7:     private final Destination destination1;
+8:     private final Destination destination2;
+9:     private final HashSet<Path> pathTiles;
+10: 
+11:     Road(int roadIndex, int[][] positions, Tile[][] tiles){
+12:         this.roadIndex = roadIndex;
+13: 
+14:         int destination1Row = positions[0][0];
+15:         int destination1Column = positions[0][1];
+16:         this.destination1 = new Destination(this, destination1Row, destination1Column);
+17:         tiles[destination1Row][destination1Column] = destination1;
+18: 
+19:         int destination2Row = positions[1][0];
+20:         int destination2Column = positions[1][1];
+21:         this.destination2 = new Destination(this, destination2Row, destination2Column);
+22:         tiles[destination2Row][destination2Column] = destination2;
+23: 
+24:         this.pathTiles = new HashSet<>();
+25: 
+26:     }
+27: 
+28:     public Iterator<Path> getPathIterator() {
+29:         return pathTiles.iterator();
+30:     }
+31: 
+32:     public void addPath(Path path){
+33:         pathTiles.add(path);
+34:     }
+35: 
+36:     public void removePath(Path path){
+37:         pathTiles.remove(path);
+38:     }
+39:     public int getRoadIndex() {
+40:         return roadIndex;
+41:     }
+42:     public Destination getDestination1() {
+43:         return destination1;
+44:     }
+45:     public Destination getDestination2() {
+46:         return destination2;
+47:     }
+48: 
+49:     private boolean isConnected(){
+50:         Iterator<Path> iterator = getPathIterator();
+51:         while(iterator.hasNext()){
+52:             Path path = iterator.next();
+53:             if(path.getState() != PathState.FULLYCONNECTED) {
+54:                 return false;
+55:             }
+56:         }
+57:         return getDestination1().getState() == DestinationState.USING && getDestination2().getState() == DestinationState.USING;
+58:     }
+59: 
+60:     public void completeDestinations(){
+61:         if(isConnected()){
+62:             getDestination1().setStateConnected();
+63:             getDestination2().setStateConnected();
+64:         }
+65:     }
+66: 
+67:     public void disconnectAllTiles(){
+68:         getDestination1().getsDisconnected();
+69:         getDestination2().getsDisconnected();
+70:         Iterator<Path> iterator = getPathIterator();
+71:         while(iterator.hasNext()){
+72:             Path path = iterator.next();
+73:             path.getsDisconnected();
+74:             iterator.remove();
+75:         }
+76: 
+77:     }
+78: 
+79:     public void disconnectFollowingTiles(Connectable tile){
+80:         if(!(tile instanceof Path) ){
+81:             return;
+82:         }
+83:         Path path  = (Path) tile;
+84:         Connectable usedTile = tile;
+85:         if(path.getState() != PathState.FULLYCONNECTED){
+86:             return;
+87:         }
+88:         Connectable nextTile = (Connectable) path.getNextConnectedTile();
+89:         while(nextTile instanceof Path ) {
+90:             path = (Path) nextTile;
+91:             usedTile = nextTile;
+92:             nextTile = (Connectable) path.getNextConnectedTile();
+93:             removePath(path);
+94:             usedTile.getsDisconnected();
+95:             if(nextTile == tile){
+96:                 break;
+97:             }
+98: 
+99:         }
+100:         if(nextTile instanceof Destination){
+101:             getDestination2().setStateUsing();
+102:             getDestination1().setStateUsing();
+103:             nextTile.getsDisconnected();
+104:         }
+105:     }
+106: }
+</written_text_document>
+<assistant_response id = "example2">
+{ "firstLine": 5, "lastLine": 106 }
+{ "firstLine": 11, "lastLine": 26 }
+{ "firstLine": 28, "lastLine": 30 }
+{ "firstLine": 32, "lastLine": 38 }
+{ "firstLine": 39, "lastLine": 47 }
+{ "firstLine": 49, "lastLine": 58 }
+{ "firstLine": 60, "lastLine": 65 }
+{ "firstLine": 67, "lastLine": 77 }
+{ "firstLine": 79, "lastLine": 105 }
+
+
+</assistant_response>
 `;

@@ -1,8 +1,6 @@
-import { TextDocument, Range, FoldingRange, Position } from "vscode";
+import { TextDocument, Range, FoldingRange, Position, WorkspaceEdit, workspace } from "vscode";
 import { BetterFoldingRange, ProvidersList } from "../../../types";
-import Bracket from "../../../bracket-pair-colorizer-2 src/bracket";
-import BracketClose from "../../../bracket-pair-colorizer-2 src/bracketClose";
-import BracketsRange from "../bracketsRange";
+
 import * as config from "../../../configuration";
 import BetterFoldingRangeProvider from "../../../providers/betterFoldingRangeProvider";
 
@@ -56,17 +54,64 @@ export function objectEqual(a: any, b: any): boolean {
   return true;
 }
 
-export async function getRanges(document: TextDocument, providerList: ProvidersList): Promise<BetterFoldingRange[]> {
-    const excludedLanguages = config.excludedLanguages();
-    const providers: Record<string, BetterFoldingRangeProvider[]> = {};
-    
-    if (excludedLanguages.includes(document.languageId)) return [];
+export async function clearDocument(document: TextDocument, ranges: BetterFoldingRange[]){
+  const edit = new WorkspaceEdit();
+  for (const range of ranges){
+    if(range.foldingType === 'natural language'){
+      if(range.end <= document.lineCount){
+        edit.delete(document.uri, new Range(range.start, 0, range.end + 1, 0));
+      }else{
+        edit.delete(document.uri, new Range(range.start, 0, range.end, document.lineAt(range.end).text.length));
+      }
+    }else if(range.foldingType === 'code'){
+      edit.delete(document.uri, new Range(range.start, 0, range.start, document.lineAt(range.start).text.length));
+      edit.delete(document.uri, new Range(range.start, document.lineAt(range.start).text.length, range.start + 1, 0));
+      edit.delete(document.uri, new Range(range.end, 0, range.end, document.lineAt(range.end).text.length));
+      if(range.end <= document.lineCount){
+        edit.delete(document.uri, new Range(range.end, document.lineAt(range.end).text.length, range.end + 1, 0));
+      }
+    }
+  } 
+  workspace.applyEdit(edit);
+}
 
+
+
+
+export function getPrefixBeforeFirstRealCharInNextNonEmptyLine(
+  document: TextDocument,
+  startLine: number
+): string | undefined {
+  for (let i = startLine; i < document.lineCount; i++) {
+    const lineText = document.lineAt(i).text;
+    if (!/\S/.test(lineText)) {
+      continue;
+    }
+
+    const firstRealCharIndex = lineText.search(/\S/);
+
+    if (firstRealCharIndex === -1) {
+      continue;
+    }
+    return lineText.slice(0, firstRealCharIndex);
+  }
+
+  return undefined;
+}
+
+export async function getRanges(document: TextDocument, providerList: ProvidersList): Promise<BetterFoldingRange[]> {
+    const providers: Record<string, BetterFoldingRangeProvider[]> = {};
     for (const [selector, provider] of providerList) {
-      if (providers[selector]) {
+      if (!providers[selector]) {
         providers[selector] = [];
       }
       providers[selector].push(provider);
+    }
+  
+    const excludedLanguages = config.excludedLanguages();
+    
+    if (excludedLanguages.includes(document.languageId)) {
+      return [];
     }
     const ranges: BetterFoldingRange[] = [];
     const languageProviders = providers[document.languageId] ?? [];
@@ -158,33 +203,66 @@ export function unfoldedRangeToInlineRangeLastLine(document: TextDocument): (ran
     new Range(range.end.line, 10, range.end.line, document.lineAt(range.end).text.length);
 }
 
-export function bracketsToBracketsRanges(brackets: Bracket[], sortBy: "end" | "start" = "end"): BracketsRange[] {
-  const ranges: BracketsRange[] = [];
+export function getNaturalLanguageAndCodeRegionText(
+    document: TextDocument,
+    naturalLanguageRange: BetterFoldingRange,
+    codeRange: BetterFoldingRange
+): string {
+    return document.getText(new Range(naturalLanguageRange.start, 0, codeRange.end, document.lineAt(codeRange.end).text.length));
+}
 
-  for (let i = brackets.length - 1; i >= 0; i--) {
-    const bracket = brackets[i];
-    if (bracket instanceof BracketClose) {
-      const openBracket = bracket.openBracket;
-      if (openBracket) {
-        const bracketsRange = new BracketsRange(openBracket, bracket);
-        ranges.push(bracketsRange);
+export function getRegionText(
+    document: TextDocument,
+    foldingRange: BetterFoldingRange
+): string {
+    return document.getText(new Range(foldingRange.start, 0, foldingRange.end, document.lineAt(foldingRange.end).text.length));
+}
+
+export function getMaxObject<T>(arr: T[], selector: (item: T) => number | null | undefined): T | null {
+  return arr.reduce<T | null>((max, item) => {
+    const val = selector(item);
+    if (val == null) return max;
+
+    if (max == null) return item;
+
+    const maxVal = selector(max);
+    if (maxVal == null || val > maxVal) return item;
+
+    return max;
+  }, null);
+}
+
+export function forEachForestLevel<T>(
+  roots: T[],
+  childrenMap: Map<T, T[]>,
+  action: (node: T, level: number) => void,
+  skipChildrenCondition: (node: T, level: number) => boolean = () => false
+): void {
+  let currentLevelNodes: T[] = [...roots];
+  let level = 0;
+
+  while (currentLevelNodes.length > 0) {
+    const nextLevelNodes: T[] = [];
+
+    for (const node of currentLevelNodes) {
+      action(node, level);
+
+      if (skipChildrenCondition(node, level)) {
+        continue;
       }
+
+      nextLevelNodes.push(...(childrenMap.get(node) ?? []));
     }
+
+    currentLevelNodes = nextLevelNodes;
+    level++;
   }
+}
 
-  ranges.sort((a, b) => {
-    if (a.end.isAfter(b.end)) {
-      if (a.contains(b)) {
-        return 1;
-      }
-      return -1;
+export function getDocumentLines(document: TextDocument): string {
+    let text = '';
+    for (let currentLine = 0; currentLine < document.lineCount; currentLine++) {
+        text += currentLine + ': ' + document.lineAt(currentLine).text + '\n';
     }
-
-    if (b.contains(a)) {
-      return -1;
-    }
-    return 1;
-  });
-
-  return sortBy === "start" ? ranges.reverse() : ranges;
+    return text;
 }

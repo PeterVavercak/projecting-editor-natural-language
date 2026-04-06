@@ -1,62 +1,144 @@
 
-import * as vscode from 'vscode';
-import { parseText, writeNaturalLanguage } from './Parser';
-import { GENERATE_ALL_CODES, GENERATE_ALL_NATURAL_LANGUAGE } from './LanguageModelPrompts';
-import { getConfiguredLanguageModel } from './configuration';
+import { CancellationTokenSource, LanguageModelChatMessage, LanguageModelChatResponse, lm, Position, TextDocument, WorkspaceEdit, Range, workspace } from 'vscode';
+import { GENERATE_ALL_CODES, GENERATE_ALL_NATURAL_LANGUAGE, GENERATE_REGIONS } from './LanguageModelPrompts';
+import * as config from "./configuration";
+import { getRegionTokens } from './language-tokens/languageRegionTokens';
+import { getDocumentLines, getPrefixBeforeFirstRealCharInNextNonEmptyLine } from './utils/classes/functions/utils';
+import { getCommentBlockTokens } from './language-tokens/languageCommentBlockToken';
 
+const languageModel = config.getConfiguredLanguageModel();
 
+export async function generateStructuredOutputResponse(document: TextDocument, useCase: 'genNL' | 'genCode' | 'genRegion') {
+    const documentLines = getDocumentLines(document);
+    let languageInstruction;
+    switch (useCase) {
+        case 'genNL':
+            languageInstruction = GENERATE_ALL_NATURAL_LANGUAGE;
+            break;
+        case 'genCode':
+            languageInstruction = GENERATE_ALL_CODES;
+            break;
+        case 'genRegion':
+            languageInstruction = GENERATE_REGIONS;
+            break;
+    }
 
-const languageModel = getConfiguredLanguageModel() ?? 'gpt-4o';
-
-
-
-
-
-export async function writeAllNL(documentLines: string, document: vscode.TextDocument) {
-
-    let [model] = await vscode.lm.selectChatModels({
+    let [model] = await lm.selectChatModels({
         vendor: 'copilot',
-        family: 'gpt-4o'
+        family: languageModel
     });
     const messages = [
-        vscode.LanguageModelChatMessage.User(GENERATE_ALL_NATURAL_LANGUAGE),
-        vscode.LanguageModelChatMessage.User(documentLines)
+        LanguageModelChatMessage.User(languageInstruction),
+        LanguageModelChatMessage.User(document.languageId),
+        LanguageModelChatMessage.User(documentLines)
     ];
     if (model) {
         let chatResponse = await model.sendRequest(
             messages,
             {},
-            new vscode.CancellationTokenSource().token
+            new CancellationTokenSource().token
         );
-        await createEdits(chatResponse, document);
+        if (useCase === 'genNL') {
+             await writeNaturalLanguages(chatResponse, document);
+            //await logOutputs(chatResponse, document);
+        } else if (useCase === 'genCode') {
+            await writeCodes(chatResponse, document);
+            //await logOutputs(chatResponse, document);
+        } else {
+            await divideDocument(chatResponse, document);
+            //await logOutputs(chatResponse, document);
+
+
+        }
     }
 
 }
 
-async function createEdits(
-    chatResponse: vscode.LanguageModelChatResponse,
-    textDocument: vscode.TextDocument
+async function writeNaturalLanguages(
+    response: LanguageModelChatResponse,
+    document: TextDocument
 ) {
     let accumulatedResponse = '';
-    const edit = new vscode.WorkspaceEdit();
+    const edit = new WorkspaceEdit();
+    const commentTokens = getCommentBlockTokens(document);
 
-    for await (const fragment of chatResponse.text) {
+
+    for await (const fragment of response.text) {
         accumulatedResponse += fragment;
 
         // if the fragment is a }, we can try to parse the whole line
         if (fragment.includes('}')) {
-            //    console.log('here');
-            //    console.log(accumulatedResponse);
+
             try {
                 const annotation = JSON.parse(accumulatedResponse);
                 console.log(annotation);
+                if ("line" in annotation) {
+                    const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, annotation.line);
+                    let nlText: string = annotation.text;
+                    nlText = nlText.split('\n').map(line => indent + line).join('\n');
 
-                edit.replace(
-                    textDocument.uri,
-                    new vscode.Range(annotation.line, 0, annotation.line, textDocument.lineAt(annotation.line).text.length),
-                    '#region ' + annotation.text
-                );
+                    edit.insert(
+                        document.uri,
+                        new Position(annotation.line, 0),
+                        indent + commentTokens.start + 'nlregion\n' + nlText + '\n' + indent + 'endnlregion' + commentTokens.end + '\n'
+                    );
+                }
+                else if ("firstLine" in annotation && "lastLine" in annotation) {
+                    const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, annotation.lastLine + 1);
+                    let nlText: string = annotation.text;
+                    nlText = nlText.split('\n').map(line => indent + line).join('\n');
+                    edit.replace(
+                        document.uri,
+                        new Range(annotation.firstLine, document.lineAt(annotation.firstLine).text.length, annotation.lastLine, 0),
+                        '\n' + nlText + '\n'
+                    );
+                }
+                accumulatedResponse = '';
+            } catch (e) {
+                console.log(e);
+                // do nothing
+            }
+        }
+    }
+    workspace.applyEdit(edit);
+}
 
+
+
+async function writeCodes(
+    response: LanguageModelChatResponse,
+    document: TextDocument
+) {
+    let accumulatedResponse = '';
+    const edit = new WorkspaceEdit();
+    const regionTokes = getRegionTokens(document);
+
+    for await (const fragment of response.text) {
+        accumulatedResponse += fragment;
+
+        // if the fragment is a }, we can try to parse the whole line
+        if (fragment.includes('}')) {
+            try {
+                
+                const annotation = JSON.parse(accumulatedResponse);
+
+                //     console.log(annotation);
+                if ("line" in annotation) {
+                    const indentation = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, annotation.line);
+
+                    edit.insert(
+                        document.uri,
+                        new Position(annotation.line, document.lineAt(annotation.line).text.length),
+                        '\n' + indentation + regionTokes.start + '\n' + annotation.text + '\n' + indentation + regionTokes.end
+                    );
+                }
+                else if ("firstLine" in annotation && "lastLine" in annotation) {
+                    edit.replace(
+                        document.uri,
+                        new Range(annotation.firstLine, document.lineAt(annotation.firstLine).text.length, annotation.lastLine, 0),
+                        '\n' + annotation.text + '\n'
+                    );
+                }
 
                 // reset the accumulator for the next line
                 accumulatedResponse = '';
@@ -66,67 +148,89 @@ async function createEdits(
             }
         }
     }
-    vscode.workspace.applyEdit(edit);
+    workspace.applyEdit(edit);
 }
 
 
 
-export async function writeAllCodes(documentLines: string, document: vscode.TextDocument) {
-
-    let [model] = await vscode.lm.selectChatModels({
-        vendor: 'copilot',
-        family: 'gpt-4o'
-    });
-    const messages = [
-        vscode.LanguageModelChatMessage.User(GENERATE_ALL_CODES),
-        vscode.LanguageModelChatMessage.User(documentLines)
-    ];
-    if (model) {
-        let chatResponse = await model.sendRequest(
-            messages,
-            {},
-            new vscode.CancellationTokenSource().token
-        );
-        await editCodes(chatResponse, document);
-        //console.log(await parseChatResponse(chatResponse));
-    }
-
-}
-
-async function editCodes(
-    chatResponse: vscode.LanguageModelChatResponse,
-    textDocument: vscode.TextDocument
+async function divideDocument(
+    response: LanguageModelChatResponse,
+    document: TextDocument
 ) {
+    const edit = new WorkspaceEdit();
     let accumulatedResponse = '';
-    const edit = new vscode.WorkspaceEdit();
-
-    for await (const fragment of chatResponse.text) {
+    const regionTokes = getRegionTokens(document);
+    for await (const fragment of response.text) {
         accumulatedResponse += fragment;
 
         // if the fragment is a }, we can try to parse the whole line
         if (fragment.includes('}')) {
-            //    console.log('here');
-            //    console.log(accumulatedResponse);
             try {
                 const annotation = JSON.parse(accumulatedResponse);
-                console.log(annotation);
-                edit.replace(
-                    textDocument.uri,
-                    new vscode.Range(annotation.firstLine, 0, annotation.lastLine, textDocument.lineAt(annotation.lastLine).text.length),
-                    textDocument.lineAt(annotation.firstLine).text + '\n' + annotation.code + '\n#endregion\n'
+                const indentation = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, annotation.firstLine);
+                edit.insert(
+                    document.uri,
+                    new Position(annotation.firstLine, 0),
+                    indentation + regionTokes.start + '\n'
                 );
-
-
-                // reset the accumulator for the next line
-                accumulatedResponse = '';
+                edit.insert(
+                    document.uri,
+                    new Position(annotation.lastLine, document.lineAt(annotation.lastLine).text.length),
+                    '\n' + indentation + regionTokes.end
+                );
             } catch (e) {
                 console.log(e);
                 // do nothing
             }
+
+            accumulatedResponse = '';
         }
+
     }
-    vscode.workspace.applyEdit(edit);
+    workspace.applyEdit(edit);
+
 }
+
+async function logOutputs(
+    response: LanguageModelChatResponse,
+    document: TextDocument
+) {
+    const edit = new WorkspaceEdit();
+    let accumulatedResponse = '';
+    let accumulatedResponse2 = '';
+    for await (const fragment of response.text) {
+        accumulatedResponse += fragment;
+        accumulatedResponse2 += fragment;
+
+        // if the fragment is a }, we can try to parse the whole line
+        if (fragment.includes('}')) {
+            try {
+                const annotation = JSON.parse(accumulatedResponse);
+                console.log(annotation);
+
+            } catch (e) {
+                console.log(e);
+                // do nothing
+            }
+
+            console.log(accumulatedResponse);
+
+
+            accumulatedResponse = '';
+        }
+
+    }
+    edit.insert(document.uri,
+        new Position(0,0),
+        accumulatedResponse2
+    )
+     workspace.applyEdit(edit);
+
+}
+
+
+
+
 
 
 

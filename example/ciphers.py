@@ -48,16 +48,19 @@ Returns:
 - `encrypted_message`: The encrypted string.  
 endnlregion"""
 #region
-def caesar_encrypt(message, key):
-    encrypted_message = ""
+def caesar_encrypt(message: str, key: int) -> str:
+    encrypted_message = []
+
     for char in message:
         if char.isalpha():
             shift = key % 26
             base = ord('A') if char.isupper() else ord('a')
-            encrypted_message += chr((ord(char) - base + shift) % 26 + base)
+            encrypted_char = chr(base + (ord(char) - base + shift) % 26)
+            encrypted_message.append(encrypted_char)
         else:
-            encrypted_message += char
-    return encrypted_message
+            encrypted_message.append(char)
+
+    return ''.join(encrypted_message)
 #endregion
 
 """nlregion
@@ -70,6 +73,33 @@ def caesar_decrypt(message: str, key: int) -> str:
     for char in message:
         if char.isalpha():
             shift = 65 if char.isupper() else 97
+            decrypted_message += chr((ord(char) - shift - key) % 26 + shift)
+        else:
+            decrypted_message += char
+    return decrypted_message
+#endregion
+#region
+def caesar_decrypt(message: str, key: int) -> str:
+    decrypted_message = ""
+    for char in message:
+        if char.isalpha():
+            shift = 65 if char.isupper() else 97
+        """nlregion
+        ----
+        Function to decrypt a message using the Caesar cipher technique
+        ----
+        - Decrypts alphabetic characters by shifting them backward by the given key.
+        - Maintains the case of the original characters (uppercase or lowercase).
+        - Non-alphabetic characters are left unchanged.
+        
+        Parameters:
+        - message: the encrypted string to be decrypted.
+        - key: the integer value representing the decryption shift.
+        
+        Returns:
+        - decrypted_message: the decrypted string after applying the Caesar cipher. 
+        ----
+        endnlregion"""
             decrypted_message += chr((ord(char) - shift - key) % 26 + shift)
         else:
             decrypted_message += char

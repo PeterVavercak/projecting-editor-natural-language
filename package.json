@@ -26,16 +26,31 @@
         "category": "NL Display"
       },
       {
-        "command": "nlDisplay.writeNL",
+        "command": "ProjectingNLEditor.writeNL",
         "title": "Write Natural Language",
-        "category": "NL Display",
+        "category": "Projecting Natural Language Editor",
         "icon": "$(call-incoming)"
       },
       {
-        "command": "nlDisplay.writeCode",
+        "command": "ProjectingNLEditor.writeCode",
         "title": "Write Code",
-        "category": "NL Display",
+        "category": "Projecting Natural Language Editor",
         "icon": "$(call-outgoing)"
+      },
+      {
+        "command": "ProjectingNLEditor.generateRegions",
+        "category": "Projecting Natural Language Editor",
+        "title": "Generate Regions"
+      },
+      {
+        "command": "ProjectingNLEditor.showNLRegions",
+        "category": "Projecting Natural Language Editor",
+        "title": "Show Natural Language Regions"
+      },
+      {
+        "command": "ProjectingNLEditor.showCodeRegions",
+        "category": "Projecting Natural Language Editor",
+        "title": "Show Code Regions"
       },
       {
         "command": "test.testCommand",
@@ -50,11 +65,11 @@
     "menus": {
       "editor/title": [
         {
-          "command": "nlDisplay.writeNL",
+          "command": "ProjectingNLEditor.writeNL",
           "group": "navigation"
         },
         {
-          "command": "nlDisplay.writeCode",
+          "command": "ProjectingNLEditor.writeCode",
           "group": "navigation"
         }
       ]
@@ -63,7 +78,7 @@
       "title": "Settings Editor Test Extension",
       "type": "object",
       "properties": {
-        "settingsEditorTestExtension.enumSetting": {
+        "projectingNaturalLanguage.setLanguageModel": {
           "type": "string",
           "enum": [
             "gpt-4o",
@@ -93,6 +108,16 @@
           ],
           "default": "gpt-4o",
           "description": "Example setting with an enum"
+        },
+        "projectingNaturalLanguage.automaticTranslation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatic Translation"
+        },
+        "projectingNaturalLanguage.automaticFolding": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatic Folding"
         }
       }
     }
