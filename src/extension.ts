@@ -2,7 +2,6 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 //import { generateCode, generateNaturalLanguage, updateCode } from './naturallanguage';
-import { SnapshotProvider, SNAPSHOT_SCHEME } from "./ContentProvider";
 import { registerSnapshotCommands } from "./comands";
 
 import { commands, ExtensionContext, languages, window, workspace, Uri } from "vscode";
@@ -10,15 +9,17 @@ import { CLEAR_ZEN_FOLDS_COMMAND, CONFIG_ID, CREATE_ZEN_FOLDS_COMMAND } from "./
 import FoldingDecorator from "./decorators/foldingDecorator";
 import * as config from "./configuration";
 import RegionRangesProvider from "./providers/regionRangesProvider";
-import FoldedLinesManager from "./utils/classes/foldedLinesManager";
-import ManipulateFoldManager from "./utils/classes/manipulateFoldManager";
+
+import FoldedLinesManager from "./utils/classes/managers/foldedLinesManager";
+import ManipulateFoldManager from "./utils/classes/managers/manipulateFoldManager";
 
 import { ProvidersList, VisibleState } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 //import RegionCodeLensProvider from './providers/regionCodeLensProvider';
 
-import { openComplementaryRegion } from './utils/classes/foldingManager';
-import ExtendedMap from './extendedMap';
+import ExtendedMap from './utils/classes/extendedMap';
+import { openComplementaryRegion } from './actions/foldingaction';
+import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/SnapshotProvider';
 
 //const bracketRangesProvider = new BracketRangesProvider();
 const regionRangesProvider = new RegionRangesProvider();
@@ -45,26 +46,6 @@ const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: vscode.ExtensionContext) {
 
-  type FoldAction = 'fold' | 'unfold';
-
-  let pendingAction: { token: symbol; type: FoldAction } | undefined;
-
-  async function runFoldCommand(type: FoldAction) {
-    const token = Symbol(type);
-    pendingAction = { token, type };
-
-    await vscode.commands.executeCommand(
-      type === 'fold' ? 'editor.fold' : 'editor.unfold'
-    );
-
-    queueMicrotask(() => {
-      if (pendingAction?.token === token) {
-        pendingAction = undefined;
-      }
-    });
-  }
-
-  //  console.log('is working');
   context.subscriptions.push(
     snapshotProvider,
     vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshotProvider),
@@ -115,12 +96,12 @@ export function activate(context: vscode.ExtensionContext) {
     }),
 
     workspace.onDidChangeTextDocument((e) => {
-//console.log('did change');
+      //console.log('did change');
 
       // zenFoldingDecorator.onChange(e);
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
       if (e.contentChanges.length === 0) {
-       // console.log('content change is 0');
+        // console.log('content change is 0');
         return;
       }
       recentlyEditedDocs.set(e.document.uri, Date.now());
@@ -136,7 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
       const lastEdit = recentlyEditedDocs.get(e.textEditor.document.uri) ?? 0;
 
       if (Date.now() - lastEdit < 50) {
-       // console.log('last action was edit');
+        // console.log('last action was edit');
         return;
       }
 
@@ -145,28 +126,20 @@ export function activate(context: vscode.ExtensionContext) {
       ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, regionRangesProvider);
 
       if (!ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
-      //  console.log('last action was not folding');
+        //  console.log('last action was not folding');
         return;
       } else {
-       // console.log('last action was folding');
+        // console.log('last action was folding');
       }
 
       if (ManipulateFoldManager.getCommandInvoked(e.textEditor)) {
-      //  console.log('last folding was automatic');
+        //  console.log('last folding was automatic');
         ManipulateFoldManager.setCommandInvoked(e.textEditor, false);
         return;
       }
 
-
       openComplementaryRegion(e.textEditor, regionRangesProvider, snapshotProvider);
-      //  zenFoldingDecorator.triggerUpdateDecorations(e.textEditor);
-      //  foldingDecorator.triggerUpdateDecorations(e.textEditor);
-      /*
-            setTimeout(async () => {
-              zenFoldingDecorator.triggerUpdateDecorations(e.textEditor);
-              foldingDecorator.triggerUpdateDecorations(e.textEditor);
-            }, 100);
-            */
+
     }),
 
 
@@ -234,8 +207,6 @@ function restart() {
   foldingDecorator?.dispose();
   foldingDecorator = new FoldingDecorator(foldingProviders);
 }
-
-
 
 // This method is called when your extension is deactivated
 export function deactivate() {

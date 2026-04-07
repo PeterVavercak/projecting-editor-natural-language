@@ -16,6 +16,16 @@ export const REGION_CONFIG: Record<string, RegionTokens> = {
     end: "#endregion",
     lineComment: "#",
   },
+   c: {
+    start: "#pragma region",
+    end: "#pragma endregion",
+    lineComment: "//",
+  },
+   cpp: {
+    start: "#pragma region",
+    end: "#pragma endregion",
+    lineComment: "//",
+  },
   javascript: {
     start: "//#region",
     end: "//#endregion",

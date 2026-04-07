@@ -1,7 +1,5 @@
 import { Range, TextEditor, Uri, window } from "vscode";
-import ExtendedMap from "./extendedMap";
-import { LastFoldedLine } from "../../types";
-import { isLineInRanges, printSet } from "./functions/utils";
+import ExtendedMap from "../extendedMap";
 
 /**
  * Util class to manage folded lines since vscode does not provide a way to tell if a line is folded or not.

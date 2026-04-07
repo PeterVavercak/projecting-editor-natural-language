@@ -1,10 +1,10 @@
 import { workspace, WorkspaceEdit, LanguageModelChatMessage, LanguageModelChatResponse, lm, TextDocument, CancellationTokenSource, Range, Position } from 'vscode';
-import { GENERATE_CODE, GENERATE_NATURAL_LANGUAGE, UPDATE_CODE, UPDATE_NATURAL_LANGUAGE } from './LanguageModelPrompts';
-import * as config from "./configuration";
-import { BetterFoldingRange, LanguageTranslation } from './types';
-import { getPrefixBeforeFirstRealCharInNextNonEmptyLine } from './utils/classes/functions/utils';
-import { getRegionTokens } from './language-tokens/languageRegionTokens';
-import { getCommentBlockTokens } from './language-tokens/languageCommentBlockToken';
+import { GENERATE_CODE, GENERATE_NATURAL_LANGUAGE, UPDATE_CODE, UPDATE_NATURAL_LANGUAGE } from './languageModelPrompts';
+import * as config from "../configuration";
+import { BetterFoldingRange, LanguageTranslation } from '../types';
+import { getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
+import { getRegionTokens } from '../languageTokens/languageRegionTokens';
+import { getCommentBlockTokens } from '../languageTokens/languageCommentBlockToken';
 
 const languageModel = config.getConfiguredLanguageModel();
 
@@ -119,7 +119,7 @@ async function addNewNaturalLanguageIntoDoc(
     edit.insert(
         document.uri,
         new Position(codeRange.start, 0),
-        indent + commentTokens.start + 'nlregion\n' + accumulatedResponse + '\n' + indent + 'endnlregion' + commentTokens.end + '\n'
+        indent + commentTokens.start + '\n' + accumulatedResponse + '\n' + indent + commentTokens.end + '\n'
     );
     workspace.applyEdit(edit);
 }
@@ -169,19 +169,11 @@ async function rewriteDocWithLanguageResponse(
         return;
     }
     let accumulatedResponse = await parseChatResponse(response);
-    console.log('');
-    console.log('Add new code into doc');
-    console.log(accumulatedResponse);
-    console.log('');
     const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, codeRange.start + 1);
 
     if (useCase === 'updateNL') {
         accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
     }
-
-
-
-
     // console.log();
     // console.log('rewrite doc with language response');
     // console.log(accumulatedResponse);

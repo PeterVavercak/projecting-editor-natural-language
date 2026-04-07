@@ -1,11 +1,11 @@
 // src/commands.ts
 import * as vscode from "vscode";
 import { workspace, window } from "vscode";
-import { SnapshotProvider } from "./ContentProvider";
-import { generateStructuredOutputResponse } from "./NaturalLanguageTextDoc";
+import { generateStructuredOutputResponse } from "./languageModel/languageModelTextDoc";
 import { clearDocument, getDocumentLines, getRanges } from "./utils/classes/functions/utils";
 import { ProvidersList } from "./types";
-import { showAllCodeRegions, showAllNaturalLanguageRegions } from "./utils/classes/foldingManager";
+import { showAllCodeRegions, showAllNaturalLanguageRegions } from "./actions/foldingaction";
+import { SnapshotProvider } from "./providers/snapshotProvider";
 
 
 /** Register commands and return disposables to push into subscriptions. */
@@ -105,7 +105,7 @@ export function registerSnapshotCommands(provider: SnapshotProvider, foldingProv
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
     console.log(editor.document.languageId);
-   // console.log(JSON.stringify(editor.document.getText()));
+    console.log(JSON.stringify(editor.document.getText()));
 
   });
 

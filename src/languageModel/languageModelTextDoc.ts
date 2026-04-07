@@ -1,10 +1,10 @@
 
 import { CancellationTokenSource, LanguageModelChatMessage, LanguageModelChatResponse, lm, Position, TextDocument, WorkspaceEdit, Range, workspace } from 'vscode';
-import { GENERATE_ALL_CODES, GENERATE_ALL_NATURAL_LANGUAGE, GENERATE_REGIONS } from './LanguageModelPrompts';
-import * as config from "./configuration";
-import { getRegionTokens } from './language-tokens/languageRegionTokens';
-import { getDocumentLines, getPrefixBeforeFirstRealCharInNextNonEmptyLine } from './utils/classes/functions/utils';
-import { getCommentBlockTokens } from './language-tokens/languageCommentBlockToken';
+import * as config from "../configuration";
+import { getRegionTokens } from '../languageTokens/languageRegionTokens';
+import { getDocumentLines, getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
+import { getCommentBlockTokens } from '../languageTokens/languageCommentBlockToken';
+import { GENERATE_ALL_NATURAL_LANGUAGE, GENERATE_ALL_CODES, GENERATE_REGIONS } from './languageModelPrompts';
 
 const languageModel = config.getConfiguredLanguageModel();
 
@@ -39,7 +39,7 @@ export async function generateStructuredOutputResponse(document: TextDocument, u
             new CancellationTokenSource().token
         );
         if (useCase === 'genNL') {
-             await writeNaturalLanguages(chatResponse, document);
+            await writeNaturalLanguages(chatResponse, document);
             //await logOutputs(chatResponse, document);
         } else if (useCase === 'genCode') {
             await writeCodes(chatResponse, document);
@@ -47,8 +47,6 @@ export async function generateStructuredOutputResponse(document: TextDocument, u
         } else {
             await divideDocument(chatResponse, document);
             //await logOutputs(chatResponse, document);
-
-
         }
     }
 
@@ -80,7 +78,7 @@ async function writeNaturalLanguages(
                     edit.insert(
                         document.uri,
                         new Position(annotation.line, 0),
-                        indent + commentTokens.start + 'nlregion\n' + nlText + '\n' + indent + 'endnlregion' + commentTokens.end + '\n'
+                        indent + commentTokens.start + '\n' + nlText + '\n' + indent + commentTokens.end + '\n'
                     );
                 }
                 else if ("firstLine" in annotation && "lastLine" in annotation) {
@@ -119,7 +117,7 @@ async function writeCodes(
         // if the fragment is a }, we can try to parse the whole line
         if (fragment.includes('}')) {
             try {
-                
+
                 const annotation = JSON.parse(accumulatedResponse);
 
                 //     console.log(annotation);
@@ -221,10 +219,10 @@ async function logOutputs(
 
     }
     edit.insert(document.uri,
-        new Position(0,0),
+        new Position(0, 0),
         accumulatedResponse2
-    )
-     workspace.applyEdit(edit);
+    );
+    workspace.applyEdit(edit);
 
 }
 

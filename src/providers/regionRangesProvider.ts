@@ -1,8 +1,8 @@
-import { TextDocument, FoldingRangeKind} from "vscode";
-import { BetterFoldingRange, LineRegionNode} from "../types";
+import { TextDocument, FoldingRangeKind } from "vscode";
+import { BetterFoldingRange, LineRegionNode } from "../types";
 import BetterFoldingRangeProvider from "./betterFoldingRangeProvider";
 
-const NL_REGION_REGEX = /[ \t]*("""|\/\*)nlregion\r?\n([\s\S]*?)[ \t]*endnlregion("""|\*\/)/g;
+const NL_REGION_REGEX = /[ \t]*(\/\*|#)nlregion\r?\n([\s\S]*?)[ \t]*(endnlregion\*\/|#endnlregion)/g;
 
 export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
@@ -25,7 +25,7 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
         ranges.push({
           start: startPosition.line,
           end: endPosition.line,
-          kind: FoldingRangeKind.Comment,
+          //kind: FoldingRangeKind.Comment,
           startColumn: document.lineAt(startPosition.line).firstNonWhitespaceCharacterIndex,
           foldingType
         });
@@ -34,8 +34,8 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
     return ranges;
   }
 
-  public getRanges(document: TextDocument): BetterFoldingRange[]{
-     const ranges: BetterFoldingRange[] = [];
+  public getRanges(document: TextDocument): BetterFoldingRange[] {
+    const ranges: BetterFoldingRange[] = [];
 
     ranges.push(...this.buildFoldingRanges(document));
     ranges.push(...this.calculateRangesForRegex(document, NL_REGION_REGEX, 'natural language'));
@@ -44,9 +44,6 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
   private buildFoldingRanges(document: TextDocument): BetterFoldingRange[] {
     const regions = this.parseNestedRegionsByLines(document);
-    //console.log('get nested regions');
-    //console.log(regions);
-    
     const result: BetterFoldingRange[] = [];
 
     function visit(nodes: LineRegionNode[]) {
@@ -74,51 +71,44 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
 
   private parseNestedRegionsByLines(document: TextDocument): LineRegionNode[] {
-  const text = document.getText();
-  const lines = text.split(/\r?\n/);
-  const roots: LineRegionNode[] = [];
-  const stack: LineRegionNode[] = [];
+    const text = document.getText();
+    const lines = text.split(/\r?\n/);
+    const roots: LineRegionNode[] = [];
+    const stack: LineRegionNode[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
 
-    if (/^(?:\/\/\s*)?#region\b/i.test(line)) {
-      const name = line.replace(/^(?:\/\/\s*)?#region\b/i, "").trim() || undefined;
+      if (/^(?:\/\/\s*)?#region\b/i.test(line)) {
+        const name = line.replace(/^(?:\/\/\s*)?#region\b/i, "").trim() || undefined;
 
-      const node: LineRegionNode = {
-        name,
-        startLine: i,
-        children: [],
-        parent: stack[stack.length - 1],
-        nestingLevel: stack.length,
-      };
+        const node: LineRegionNode = {
+          name,
+          startLine: i,
+          children: [],
+          parent: stack[stack.length - 1],
+          nestingLevel: stack.length,
+        };
 
-      if (stack.length === 0) {
-        roots.push(node);
-      } else {
-        stack[stack.length - 1].children.push(node);
+        if (stack.length === 0) {
+          roots.push(node);
+        } else {
+          stack[stack.length - 1].children.push(node);
+        }
+
+        stack.push(node);
+      } else if (/^(?:\/\/\s*)?#endregion\b/i.test(line)) {
+        const current = stack.pop();
+
+        if (!current) {
+          continue;
+        }
+
+        current.endLine = i;
       }
 
-      stack.push(node);
-    } else if (/^(?:\/\/\s*)?#endregion\b/i.test(line)) {
-      const current = stack.pop();
-
-      if (!current) {
-        continue;
-      }
-
-      current.endLine = i;
     }
-    
+
+    return roots;
   }
-
-  return roots;
 }
-
-
-
-
-
-}
-
-

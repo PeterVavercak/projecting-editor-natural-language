@@ -3,7 +3,7 @@ import { BetterFoldingRange, DecorationsRecord, ProvidersList } from "../types";
 import ExtendedMap from "../utils/classes/extendedMap";
 import { foldingRangeToRange, groupArrayToMap, rangeToInlineRange, unfoldedRangeToInlineRangeFirstLine, unfoldedRangeToInlineRangeLastLine } from "../utils/classes/functions/utils";
 import * as config from "../configuration";
-import FoldedLinesManager from "../utils/classes/foldedLinesManager";
+import FoldedLinesManager from "../utils/classes/managers/foldedLinesManager";
 import { DEFAULT_COLLAPSED_TEXT } from "../constants";
 import BetterFoldingDecorator from "./betterFoldingDecorator";
 import BetterFoldingRangeProvider from "../providers/betterFoldingRangeProvider";

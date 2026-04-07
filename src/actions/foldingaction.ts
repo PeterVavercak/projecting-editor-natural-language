@@ -1,17 +1,19 @@
+import * as config from "../configuration";
 import { TextDocument, TextEditor, commands } from "vscode";
-import { BetterFoldingRange, LanguageTranslation, LastFoldedLine, NaturalLanguageRegionCouple, TreeNode } from "../../types";
-import FoldedLinesManager from "./foldedLinesManager";
-import ManipulatedFoldManager from "./manipulateFoldManager";
-
-import { foldingRangeToRange, forEachForestLevel, getMaxObject, getNaturalLanguageAndCodeRegionText, pairByRelation } from "./functions/utils";
-import { generateLanguageResponse } from "../../NaturalLanguageSegments";
-import RegionRangesProvider from "../../providers/regionRangesProvider";
-import { SnapshotProvider } from "../../ContentProvider";
-import * as config from "../../configuration";
+import { generateLanguageResponse } from "../languageModel/languageModelSegments";
+import RegionRangesProvider from "../providers/regionRangesProvider";
+import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldManager";
+import FoldedLinesManager from "../utils/classes/managers/foldedLinesManager";
+import { BetterFoldingRange, NaturalLanguageRegionCouple, LanguageTranslation, LastFoldedLine } from "../types";
+import { foldingRangeToRange, forEachForestLevel, pairByRelation } from "../utils/classes/functions/utils";
+import { SnapshotProvider } from "../providers/SnapshotProvider";
 
 
 
-export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: BetterFoldingRange[]){
+
+
+
+export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: BetterFoldingRange[]) {
     const couples = findCouples(ranges);
     const rootCouples = couples.filter(couple => couple.nesting === 0);
     const childrenMap = buildChildrenMap(couples);
@@ -20,27 +22,27 @@ export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: Better
         rootCouples,
         childrenMap,
         (couple) => {
-            if(
+            if (
                 couple.naturalLanguageFolding !== undefined
-            ){
-                if(
+            ) {
+                if (
                     FoldedLinesManager.isFolded(transformToRange(couple.naturalLanguageFolding), editor) === true
-                ){
+                ) {
                     commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
                     ManipulatedFoldManager.setCommandInvoked(editor, true);
                 }
-                if(
+                if (
                     couple.codeFolding !== undefined &&
                     FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === false
-                ){
+                ) {
                     commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
                     ManipulatedFoldManager.setCommandInvoked(editor, true);
                 }
             }
-            else if(
+            else if (
                 couple.codeFolding !== undefined &&
                 FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === true
-            ){
+            ) {
                 commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
                 ManipulatedFoldManager.setCommandInvoked(editor, true);
             }
@@ -49,7 +51,7 @@ export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: Better
     );
 }
 
-export function showAllCodeRegions(editor: TextEditor, ranges: BetterFoldingRange[]){
+export function showAllCodeRegions(editor: TextEditor, ranges: BetterFoldingRange[]) {
     const couples = findCouples(ranges);
     const rootCouples = couples.filter(couple => couple.nesting === 0);
     const childrenMap = buildChildrenMap(couples);
@@ -58,17 +60,17 @@ export function showAllCodeRegions(editor: TextEditor, ranges: BetterFoldingRang
         rootCouples,
         childrenMap,
         (couple) => {
-            if(
+            if (
                 couple.naturalLanguageFolding !== undefined &&
                 FoldedLinesManager.isFolded(transformToRange(couple.naturalLanguageFolding), editor) === false
-            ){
+            ) {
                 commands.executeCommand('editor.fold', { selectionLines: [couple.naturalLanguageFolding.start] });
                 ManipulatedFoldManager.setCommandInvoked(editor, true);
             }
-            if(
+            if (
                 couple.codeFolding !== undefined &&
                 FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === true
-            ){
+            ) {
                 commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
                 ManipulatedFoldManager.setCommandInvoked(editor, true);
 
@@ -87,7 +89,7 @@ export function openComplementaryRegion(editor: TextEditor, regionRangesProvider
     const foldingRanges = regionRangesProvider.getRanges(editor.document);
     const foldMap = createFoldTranslationsMap(foldingRanges);
     const foundTranslation = foldMap.get(lastFolding.foldingLine);
-    if(foundTranslation === undefined){
+    if (foundTranslation === undefined) {
         return;
     }
     const [foundComplementaryRegion, chosenRegion] = foundTranslation?.hasFolded === 'code' ? [
@@ -97,10 +99,10 @@ export function openComplementaryRegion(editor: TextEditor, regionRangesProvider
         foundTranslation?.codeFolding,
         foundTranslation?.naturalLanguageFolding
     ];
-    if(chosenRegion === undefined){
+    if (chosenRegion === undefined) {
         return;
     }
-    if(wasTranslationUpdated(contentProvider, editor.document, foundTranslation)){
+    if (wasTranslationUpdated(contentProvider, editor.document, foundTranslation)) {
         generateTranslationRegion(editor.document, foundTranslation, chosenRegion, lastFolding);
     }
     contentProvider.saveFromDocument(editor.document);
@@ -113,62 +115,62 @@ export function openComplementaryRegion(editor: TextEditor, regionRangesProvider
 }
 
 function buildChildrenMap(
-  all: NaturalLanguageRegionCouple[]
+    all: NaturalLanguageRegionCouple[]
 ): Map<NaturalLanguageRegionCouple, NaturalLanguageRegionCouple[]> {
-  const map = new Map<
-    NaturalLanguageRegionCouple,
-    NaturalLanguageRegionCouple[]
-  >();
+    const map = new Map<
+        NaturalLanguageRegionCouple,
+        NaturalLanguageRegionCouple[]
+    >();
 
-  for (const parent of all) {
-    map.set(parent, []);
-  }
-
-  for (const parent of all) {
-    for (const child of all) {
-      if (parent === child) continue;
-
-      if (isChild(parent, child)) {
-        map.get(parent)!.push(child);
-      }
+    for (const parent of all) {
+        map.set(parent, []);
     }
-  }
 
-  return map;
+    for (const parent of all) {
+        for (const child of all) {
+            if (parent === child) continue;
+
+            if (isChild(parent, child)) {
+                map.get(parent)!.push(child);
+            }
+        }
+    }
+
+    return map;
 }
 
 function isChild(
-  parent: NaturalLanguageRegionCouple,
-  child: NaturalLanguageRegionCouple
+    parent: NaturalLanguageRegionCouple,
+    child: NaturalLanguageRegionCouple
 ): boolean {
-  if (!parent.codeFolding || parent.nesting === undefined) return false;
+    if (!parent.codeFolding || parent.nesting === undefined) return false;
 
-  const parentStart = parent.codeFolding.start;
-  const parentEnd = parent.codeFolding.end;
+    const parentStart = parent.codeFolding.start;
+    const parentEnd = parent.codeFolding.end;
 
-  const childStart =
-    child.naturalLanguageFolding?.start ?? child.codeFolding?.start;
-  const childEnd =
-    child.codeFolding?.end ?? child.naturalLanguageFolding?.end;
+    const childStart =
+        child.naturalLanguageFolding?.start ?? child.codeFolding?.start;
+    const childEnd =
+        child.codeFolding?.end ?? child.naturalLanguageFolding?.end;
 
-  if (childStart === undefined || childEnd === undefined) return false;
+    if (childStart === undefined || childEnd === undefined) return false;
 
-  return (
-    childStart > parentStart &&
-    childEnd < parentEnd &&
-    child.nesting === parent.nesting + 1
-  );
+    return (
+        childStart > parentStart &&
+        childEnd < parentEnd &&
+        child.nesting === parent.nesting + 1
+    );
 }
 
-function generateTranslationRegion(document: TextDocument, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine){
-    if(!config.getAutomaticTranslation()){
+function generateTranslationRegion(document: TextDocument, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
+    if (!config.getAutomaticTranslation()) {
         return;
     }
     const closingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasFolded';
     const closingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasFolded';
     const openingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasUnfolded';
     const openingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasUnfolded';
-   
+
     if (closingCodeRegion || openingLanguageRegion) {
         if (translation.naturalLanguageFolding === undefined) {
             // generate new natural language
@@ -190,14 +192,14 @@ function generateTranslationRegion(document: TextDocument, translation: Language
             generateLanguageResponse(document, translation, 'updateCode');
         }
     }
-        
+
 }
 
-function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFoldedLine, complementaryRegion: BetterFoldingRange | undefined){
-    if(!config.getAutomaticFolding()){
+function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFoldedLine, complementaryRegion: BetterFoldingRange | undefined) {
+    if (!config.getAutomaticFolding()) {
         return;
     }
-    if(complementaryRegion === undefined ){
+    if (complementaryRegion === undefined) {
         return;
     }
     const transformToRange = foldingRangeToRange(editor.document);
@@ -212,22 +214,22 @@ function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFold
     }
 }
 
-function wasTranslationUpdated(provider: SnapshotProvider, document: TextDocument, translation: LanguageTranslation) : boolean {
-    if(translation.codeFolding === undefined || translation.naturalLanguageFolding === undefined){
+function wasTranslationUpdated(provider: SnapshotProvider, document: TextDocument, translation: LanguageTranslation): boolean {
+    if (translation.codeFolding === undefined || translation.naturalLanguageFolding === undefined) {
         return true;
     }
     const snapshotContent = provider.getSnapshotContentFor(document.uri);
     const documentContent = document.getText();
-    
+
     if (snapshotContent === undefined) {
         return true;
     }
-        
+
     const snapshotLines = snapshotContent.split(/\r?\n/);
     const documentLines = documentContent.split(/\r?\n/);
     const snapshotTranslation = snapshotLines.slice(translation.naturalLanguageFolding.start, translation.codeFolding.end + 1);
     const documentTranslation = documentLines.slice(translation.naturalLanguageFolding.start, translation.codeFolding.end + 1);
-    if(JSON.stringify(snapshotTranslation) === JSON.stringify(documentTranslation)){
+    if (JSON.stringify(snapshotTranslation) === JSON.stringify(documentTranslation)) {
         return false;
     }
     return true;
@@ -238,7 +240,7 @@ function findCouples(foldingRanges: BetterFoldingRange[]): NaturalLanguageRegion
     const naturalLanguageRanges = foldingRanges.filter(range => range.foldingType === 'natural language');
     const relations = pairByRelation(naturalLanguageRanges, codeRanges, (nlRange, codeRange) => nlRange.end + 1 === codeRange.start);
     const couples: NaturalLanguageRegionCouple[] = [];
-    for(const relation of relations){
+    for (const relation of relations) {
         couples.push({
             naturalLanguageFolding: relation.a,
             codeFolding: relation.b,
@@ -256,19 +258,19 @@ function createFoldTranslationsMap(foldingRanges: BetterFoldingRange[]): Map<num
         if (relation.naturalLanguageFolding !== undefined) {
             foldMap.set(
                 relation.naturalLanguageFolding.start, {
-                    hasFolded: 'natural language',
-                    naturalLanguageFolding: relation.naturalLanguageFolding,
-                    codeFolding: relation.codeFolding
-                }
+                hasFolded: 'natural language',
+                naturalLanguageFolding: relation.naturalLanguageFolding,
+                codeFolding: relation.codeFolding
+            }
             );
         }
         if (relation.codeFolding !== undefined) {
             foldMap.set(
                 relation.codeFolding.start, {
-                    hasFolded: 'code',
-                    naturalLanguageFolding: relation.naturalLanguageFolding,
-                    codeFolding: relation.codeFolding
-                }
+                hasFolded: 'code',
+                naturalLanguageFolding: relation.naturalLanguageFolding,
+                codeFolding: relation.codeFolding
+            }
             );
         }
     }

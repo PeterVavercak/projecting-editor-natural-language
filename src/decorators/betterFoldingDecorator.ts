@@ -1,7 +1,7 @@
 import { DecorationRenderOptions, Disposable, TextEditor, window } from "vscode";
 
 export default abstract class BetterFoldingDecorator extends Disposable {
-  private timeout: NodeJS.Timeout | undefined = undefined;
+  private timeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
   constructor() {
     super(() => this.dispose());
