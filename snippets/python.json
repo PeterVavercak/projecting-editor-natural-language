@@ -1,11 +1,11 @@
 {
   "Natural Language region": {
     "prefix": ["#nlregion", "nlregion"],
-    "body": ["#nlregion", "# $0", "#endnlregion"],
+    "body": ["#nlregion", "# $0", "#endnlregion", ""],
     "description": "Natural Language region"
   },
   "Code Region":{
     "prefix": ["#region"],
-    "body": ["#region","$0","#endregion"]
+    "body": ["#region","$0","#endregion", ""]
   }
 }

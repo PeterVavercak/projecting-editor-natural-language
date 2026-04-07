@@ -1,12 +1,11 @@
 import * as config from "../configuration";
 import { TextDocument, TextEditor, commands } from "vscode";
 import { generateLanguageResponse } from "../languageModel/languageModelSegments";
-import RegionRangesProvider from "../providers/regionRangesProvider";
 import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldManager";
 import FoldedLinesManager from "../utils/classes/managers/foldedLinesManager";
-import { BetterFoldingRange, NaturalLanguageRegionCouple, LanguageTranslation, LastFoldedLine } from "../types";
-import { foldingRangeToRange, forEachForestLevel, pairByRelation } from "../utils/classes/functions/utils";
-import { SnapshotProvider } from "../providers/SnapshotProvider";
+import { BetterFoldingRange, NaturalLanguageRegionCouple, LanguageTranslation, LastFoldedLine, ProvidersList } from "../types";
+import { foldingRangeToRange, forEachForestLevel, getRanges, pairByRelation } from "../utils/classes/functions/utils";
+import { SnapshotProvider } from "../providers/snapshotProvider";
 
 
 
@@ -79,14 +78,15 @@ export function showAllCodeRegions(editor: TextEditor, ranges: BetterFoldingRang
     );
 }
 
-export function openComplementaryRegion(editor: TextEditor, regionRangesProvider: RegionRangesProvider, contentProvider: SnapshotProvider) {
+export async function openComplementaryRegion(editor: TextEditor, foldingRanges:  BetterFoldingRange[] , contentProvider: SnapshotProvider) {
 
     const lastFolding = ManipulatedFoldManager.getLastManipulatedFolding(editor);
     if (lastFolding === undefined) {
         return;
     }
-    //    console.log(lastFolding);
-    const foldingRanges = regionRangesProvider.getRanges(editor.document);
+
+      
+ //   const foldingRanges = foldingProviders.getRanges(editor.document);
     const foldMap = createFoldTranslationsMap(foldingRanges);
     const foundTranslation = foldMap.get(lastFolding.foldingLine);
     if (foundTranslation === undefined) {
@@ -102,13 +102,17 @@ export function openComplementaryRegion(editor: TextEditor, regionRangesProvider
     if (chosenRegion === undefined) {
         return;
     }
+    console.log('last folding');
+    console.log(lastFolding);
+    console.log('picked translation');
+    console.log(foundTranslation);
+
     if (wasTranslationUpdated(contentProvider, editor.document, foundTranslation)) {
-        generateTranslationRegion(editor.document, foundTranslation, chosenRegion, lastFolding);
+        await generateTranslationRegion(editor.document, foundTranslation, chosenRegion, lastFolding);
     }
     contentProvider.saveFromDocument(editor.document);
 
     foldUnfoldComplementaryRegion(editor, lastFolding, foundComplementaryRegion);
-
 
     FoldedLinesManager.updateFoldedLines(editor);
     //   ManipulatedFoldManager.updateFoldedLines(editor, regionRangesProvider);
@@ -162,7 +166,7 @@ function isChild(
     );
 }
 
-function generateTranslationRegion(document: TextDocument, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
+async function generateTranslationRegion(document: TextDocument, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
     if (!config.getAutomaticTranslation()) {
         return;
     }
@@ -175,21 +179,21 @@ function generateTranslationRegion(document: TextDocument, translation: Language
         if (translation.naturalLanguageFolding === undefined) {
             // generate new natural language
             console.log('generating natural language');
-            generateLanguageResponse(document, translation, 'genNL');
+            await generateLanguageResponse(document, translation, 'genNL');
         } else {
             // update natural language
             console.log('updating natural language');
-            generateLanguageResponse(document, translation, 'updateNL');
+            await generateLanguageResponse(document, translation, 'updateNL');
         }
     } else if (openingCodeRegion || closingLanguageRegion) {
         if (translation.codeFolding === undefined) {
             // Generate Code
             console.log('generating code');
-            generateLanguageResponse(document, translation, 'genCode');
+            await generateLanguageResponse(document, translation, 'genCode');
         } else {
             // Update Code
             console.log('updating code');
-            generateLanguageResponse(document, translation, 'updateCode');
+            await generateLanguageResponse(document, translation, 'updateCode');
         }
     }
 

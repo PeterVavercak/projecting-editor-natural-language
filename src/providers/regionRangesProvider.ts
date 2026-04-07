@@ -2,45 +2,16 @@ import { TextDocument, FoldingRangeKind } from "vscode";
 import { BetterFoldingRange, LineRegionNode } from "../types";
 import BetterFoldingRangeProvider from "./betterFoldingRangeProvider";
 
-const NL_REGION_REGEX = /[ \t]*(\/\*|#)nlregion\r?\n([\s\S]*?)[ \t]*(endnlregion\*\/|#endnlregion)/g;
 
 export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
   protected async calculateFoldingRanges(document: TextDocument) {
-    return this.getRanges(document);
-  }
-
-  private calculateRangesForRegex(document: TextDocument, regionRegex: RegExp, foldingType: 'code' | 'natural language'): BetterFoldingRange[] {
-    const ranges: BetterFoldingRange[] = [];
-
-    let match;
-    while ((match = regionRegex.exec(document.getText()))) {
-      if (!match?.[0] || !match?.[1]) continue;
-
-      const startPosition = document.positionAt(match.index);
-      const endPosition = document.positionAt(match.index + match[0].length);
-      //  console.log('matched code region at line: ' + startPosition.line);
-
-      if (startPosition.line !== endPosition.line) {
-        ranges.push({
-          start: startPosition.line,
-          end: endPosition.line,
-          //kind: FoldingRangeKind.Comment,
-          startColumn: document.lineAt(startPosition.line).firstNonWhitespaceCharacterIndex,
-          foldingType
-        });
-      }
-    }
-    return ranges;
-  }
-
-  public getRanges(document: TextDocument): BetterFoldingRange[] {
     const ranges: BetterFoldingRange[] = [];
 
     ranges.push(...this.buildFoldingRanges(document));
-    ranges.push(...this.calculateRangesForRegex(document, NL_REGION_REGEX, 'natural language'));
     return ranges;
   }
+
 
   private buildFoldingRanges(document: TextDocument): BetterFoldingRange[] {
     const regions = this.parseNestedRegionsByLines(document);

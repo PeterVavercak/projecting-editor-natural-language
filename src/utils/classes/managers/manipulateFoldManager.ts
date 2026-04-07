@@ -1,9 +1,9 @@
 import { TextEditor, Uri, Range, window } from "vscode";
 import RegionRangesProvider from "../../../providers/regionRangesProvider";
 import ExtendedMap from "../extendedMap";
-import { BetterFoldingRange, LastFoldedLine } from "../../../types";
+import { BetterFoldingRange, LastFoldedLine, ProvidersList } from "../../../types";
 import FoldedLinesManager from "./foldedLinesManager";
-import { foldingRangeToRange, mapsEqual, objectEqual } from "../functions/utils";
+import { foldingRangeToRange, getRanges, mapsEqual, objectEqual } from "../functions/utils";
 
 
 class ManipulateFoldManager {
@@ -27,39 +27,44 @@ class ManipulateFoldManager {
     () => false
   );
 
-  public updateAllFoldedLines(provider: RegionRangesProvider) {
+  public async updateAllFoldedLines(providers: ProvidersList) {
     // console.log('update all folded lines');
     //  FoldedLinesManager.updateAllFoldedLines();
     for (const editor of window.visibleTextEditors) {
-      this.updateFoldedLines(editor, provider);
+      await this.updateFoldedLines(editor, providers);
     }
   }
 
-  public updateFoldedLines(editor: TextEditor, provider: RegionRangesProvider) {
-    // console.log('update folded lines');
-    const regionRanges = provider.getRanges(editor.document);
+  public async updateFoldedLines(editor: TextEditor, providers: ProvidersList) {
     
+    console.log('update folded lines');
+    console.log(editor.document.uri);
+  // const regionRanges = provider.getRanges(editor.document);
+    const regionRanges = await getRanges(editor.document, providers);
+
     const ranges: Range[] = regionRanges.map(foldingRangeToRange(editor.document));
     const currentFolds = new Map(ranges.map(range => [range.start.line, FoldedLinesManager.isFolded(range, editor)]));
-    // console.log('current folds: ');
-    // this.printMap(currentFolds);
+    console.log('current folds: ');
+    this.printMap(currentFolds);
 
     this.setCachedFoldedLines(editor, currentFolds);
   }
 
 
-  public updateFoldedLinesAndLastManipulatedLine(editor: TextEditor, provider: RegionRangesProvider) {
-    const regionRanges = provider.getRanges(editor.document);
+  public async updateFoldedLinesAndLastManipulatedLine(editor: TextEditor, providers: ProvidersList) {
+   // console.log('update folding after folding');
+    const regionRanges = await getRanges(editor.document, providers);
 
     const ranges: Range[] = regionRanges.map(foldingRangeToRange(editor.document));
     const currentFolds = new Map(ranges.map(range => [range.start.line, FoldedLinesManager.isFolded(range, editor)]));
     const cachedFolds = this.getCachedFoldedLines(editor);
-    // console.log('current folds: ');
-    // this.printMap(currentFolds);
-    // console.log('cached folds: ');
-    // this.printMap(cachedFolds);
+   //  console.log('current folds: ');
+   //  this.printMap(currentFolds);
+   //  console.log('cached folds: ');
+   //  this.printMap(cachedFolds);
 
     this.updateLastManipulatedFolding(editor, cachedFolds, currentFolds);
+    console.log(this.wasLastActionFolding(editor));
 
     this.setCachedFoldedLines(editor, currentFolds);
   }
@@ -81,20 +86,11 @@ class ManipulateFoldManager {
   }
 
   private updateLastManipulatedFolding(editor: TextEditor, cachedFolds: Map<number, boolean | undefined>, currentFolds: Map<number, boolean | undefined>) {
-    /*
-    if (mapsEqual(cachedFolds, currentFolds) || cachedFolds.size !== currentFolds.size) {
-      this.cachedDifferentLastFolding.set(editor.document.uri, false);
-      return;
-    }
-    */
+  
     const filteredCachedFolds = new Map([...cachedFolds].filter(([_, value]) => value !== undefined));
     const filteredCurrentFolds = new Map([...currentFolds].filter(([_, value]) => value !== undefined));
     const equalizedCachedFolds = new Map([...filteredCachedFolds].filter(([key, _]) => filteredCurrentFolds.has(key)));
     const equalizedCurrentFolds = new Map([...filteredCurrentFolds].filter(([key, _]) => filteredCachedFolds.has(key)));
-    // console.log(JSON.stringify(Object.fromEntries(filteredCachedFolds)));
-    // console.log(JSON.stringify(Object.fromEntries(filteredCurrentFolds)));
-    // console.log(JSON.stringify(Object.fromEntries(equalizedCachedFolds)));
-    // console.log(JSON.stringify(Object.fromEntries(equalizedCurrentFolds)));
 
     for (const [key, value] of equalizedCurrentFolds) {
       if (equalizedCachedFolds.get(key) !== equalizedCurrentFolds.get(key)) {
@@ -108,9 +104,6 @@ class ManipulateFoldManager {
       }
     }
     this.cachedDifferentLastFolding.set(editor.document.uri, false);
-
-
-
   }
 
   private setCachedFoldedLines(editor: TextEditor, foldedLines: Map<number, boolean | undefined>) {
@@ -126,8 +119,6 @@ class ManipulateFoldManager {
       console.log(`${key}: ${value}`);
     }
   }
-
-
 
 }
 

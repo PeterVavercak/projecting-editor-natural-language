@@ -1,8 +1,8 @@
-import { TextDocument } from "vscode";
+import { FoldingRangeKind, TextDocument } from "vscode";
 import { BetterFoldingRange } from "../types";
 import BetterFoldingRangeProvider from "./betterFoldingRangeProvider";
 
-const NL_REGION_REGEX = /[ \t]*(\/\*|#)nlregion\r?\n([\s\S]*?)[ \t]*(endnlregion\*\/|#endnlregion)/g;
+const NL_REGION_REGEX = /[ \t]*(?:\/\*)?#nlregion\r?\n([\s\S]*?)[ \t]*#endnlregion(?:\*\/)?/g;
 
 export default class NLRangesProvider extends BetterFoldingRangeProvider {
 
@@ -13,8 +13,6 @@ export default class NLRangesProvider extends BetterFoldingRangeProvider {
     return ranges;
   
   }
-
-
 
   private calculateRangesForRegex(document: TextDocument, regionRegex: RegExp, foldingType: 'code' | 'natural language'): BetterFoldingRange[] {
     const ranges: BetterFoldingRange[] = [];
@@ -31,7 +29,7 @@ export default class NLRangesProvider extends BetterFoldingRangeProvider {
         ranges.push({
           start: startPosition.line,
           end: endPosition.line,
-          //kind: FoldingRangeKind.Comment,
+          kind: FoldingRangeKind.Comment,
           startColumn: document.lineAt(startPosition.line).firstNonWhitespaceCharacterIndex,
           foldingType
         });

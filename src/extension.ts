@@ -19,21 +19,16 @@ import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 
 import ExtendedMap from './utils/classes/extendedMap';
 import { openComplementaryRegion } from './actions/foldingaction';
-import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/SnapshotProvider';
+import { getRanges } from './utils/classes/functions/utils';
+import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/snapshotProvider';
+import NLRangesProvider from './providers/nlRangesProvider';
 
 //const bracketRangesProvider = new BracketRangesProvider();
-const regionRangesProvider = new RegionRangesProvider();
 
 const foldingProviders: ProvidersList = [
-  ["*", regionRangesProvider],
+  ["*", new RegionRangesProvider()],
+  ["*", new NLRangesProvider()]
 ];
-
-
-
-//const codeLensProvider = new RegionCodeLensProvider();
-
-
-
 
 let foldingDecorator = new FoldingDecorator(foldingProviders);
 
@@ -101,48 +96,33 @@ export function activate(context: vscode.ExtensionContext) {
       // zenFoldingDecorator.onChange(e);
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
       if (e.contentChanges.length === 0) {
-        // console.log('content change is 0');
         return;
       }
       recentlyEditedDocs.set(e.document.uri, Date.now());
       setTimeout(async () => {
         FoldedLinesManager.updateAllFoldedLines();
-        ManipulateFoldManager.updateAllFoldedLines(regionRangesProvider);
+        await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
       }, 100);
 
     }),
 
     window.onDidChangeTextEditorVisibleRanges(async (e) => {
-
       const lastEdit = recentlyEditedDocs.get(e.textEditor.document.uri) ?? 0;
-
       if (Date.now() - lastEdit < 50) {
-        // console.log('last action was edit');
         return;
       }
-
-
       FoldedLinesManager.updateFoldedLines(e.textEditor);
-      ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, regionRangesProvider);
-
+      await ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, foldingProviders);
       if (!ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
-        //  console.log('last action was not folding');
         return;
-      } else {
-        // console.log('last action was folding');
       }
-
       if (ManipulateFoldManager.getCommandInvoked(e.textEditor)) {
-        //  console.log('last folding was automatic');
         ManipulateFoldManager.setCommandInvoked(e.textEditor, false);
         return;
       }
-
-      openComplementaryRegion(e.textEditor, regionRangesProvider, snapshotProvider);
-
+      const foldingRanges = await getRanges(e.textEditor.document, foldingProviders);
+      await openComplementaryRegion(e.textEditor, foldingRanges, snapshotProvider);
     }),
-
-
   );
   registerProviders(context);
   updateAllDocuments();
@@ -168,7 +148,6 @@ function registerProviders(context: ExtensionContext) {
       }
     }
   }
-  //registerCodeLensProvider(context, "*", codeLensProvider);
 }
 
 
@@ -195,7 +174,7 @@ function updateAllDocuments() {
       //codeLensProvider.updateRanges(e, foldingDecorator);
     }
     FoldedLinesManager.updateAllFoldedLines();
-    ManipulateFoldManager.updateAllFoldedLines(regionRangesProvider);
+    await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
     //zenFoldingDecorator.triggerUpdateDecorations();
     //foldingDecorator.triggerUpdateDecorations();
   }, 500);
