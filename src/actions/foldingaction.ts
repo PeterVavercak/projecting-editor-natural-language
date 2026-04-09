@@ -1,52 +1,39 @@
 import * as config from "../configuration";
-import { TextDocument, TextEditor, commands } from "vscode";
+import { TextDocument, TextEditor, TextEditorRevealType, commands } from "vscode";
 import { generateLanguageResponse } from "../languageModel/languageModelSegments";
 import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldManager";
-import FoldedLinesManager from "../utils/classes/managers/foldedLinesManager";
 import { BetterFoldingRange, NaturalLanguageRegionCouple, LanguageTranslation, LastFoldedLine, ProvidersList } from "../types";
-import { foldingRangeToRange, forEachForestLevel, getRanges, pairByRelation } from "../utils/classes/functions/utils";
+import { foldingRangeToRange, forEachForestLevel, forEachForestLevelReverse, getRanges, pairByRelation } from "../utils/classes/functions/utils";
 import { SnapshotProvider } from "../providers/snapshotProvider";
-
-
-
-
+import { endianness } from "os";
+import { markFoldStart, markFoldEnd } from "../utils/variables";
 
 
 export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: BetterFoldingRange[]) {
     const couples = findCouples(ranges);
     const rootCouples = couples.filter(couple => couple.nesting === 0);
     const childrenMap = buildChildrenMap(couples);
-    const transformToRange = foldingRangeToRange(editor.document);
     forEachForestLevel(
         rootCouples,
         childrenMap,
-        (couple) => {
+        async (couple) => {
             if (
                 couple.naturalLanguageFolding !== undefined
             ) {
-                if (
-                    FoldedLinesManager.isFolded(transformToRange(couple.naturalLanguageFolding), editor) === true
-                ) {
-                    commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
-                    ManipulatedFoldManager.setCommandInvoked(editor, true);
-                }
-                if (
-                    couple.codeFolding !== undefined &&
-                    FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === false
-                ) {
-                    commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
-                    ManipulatedFoldManager.setCommandInvoked(editor, true);
-                }
+                markFoldStart();
+                await commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.naturalLanguageFolding.start, 'computer', 'unfolded');
+                markFoldEnd();
             }
-            else if (
-                couple.codeFolding !== undefined &&
-                FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === true
+            if (
+                couple.codeFolding !== undefined
             ) {
-                commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
-                ManipulatedFoldManager.setCommandInvoked(editor, true);
+                markFoldStart();
+                await commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.codeFolding.start, 'computer', 'folded');
+                markFoldEnd();
             }
-        },
-        (couple) => couple.naturalLanguageFolding !== undefined && couple.codeFolding !== undefined
+        }
     );
 }
 
@@ -54,39 +41,97 @@ export function showAllCodeRegions(editor: TextEditor, ranges: BetterFoldingRang
     const couples = findCouples(ranges);
     const rootCouples = couples.filter(couple => couple.nesting === 0);
     const childrenMap = buildChildrenMap(couples);
-    const transformToRange = foldingRangeToRange(editor.document);
     forEachForestLevel(
         rootCouples,
         childrenMap,
-        (couple) => {
+        async (couple) => {
             if (
-                couple.naturalLanguageFolding !== undefined &&
-                FoldedLinesManager.isFolded(transformToRange(couple.naturalLanguageFolding), editor) === false
+                couple.naturalLanguageFolding !== undefined
             ) {
-                commands.executeCommand('editor.fold', { selectionLines: [couple.naturalLanguageFolding.start] });
-                ManipulatedFoldManager.setCommandInvoked(editor, true);
+                markFoldStart();
+                await commands.executeCommand('editor.fold', { selectionLines: [couple.naturalLanguageFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.naturalLanguageFolding.start, 'computer', 'folded');
+                markFoldEnd();
             }
             if (
-                couple.codeFolding !== undefined &&
-                FoldedLinesManager.isFolded(transformToRange(couple.codeFolding), editor) === true
+                couple.codeFolding !== undefined
             ) {
-                commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
-                ManipulatedFoldManager.setCommandInvoked(editor, true);
-
+                markFoldStart();
+                await commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.codeFolding.start, 'computer', 'unfolded');
+                markFoldEnd();
             }
         }
     );
 }
 
-export async function openComplementaryRegion(editor: TextEditor, foldingRanges:  BetterFoldingRange[] , contentProvider: SnapshotProvider) {
+export function openEveryRegion(editor: TextEditor, ranges: BetterFoldingRange[]) {
+    const couples = findCouples(ranges);
+    const rootCouples = couples.filter(couple => couple.nesting === 0);
+    const childrenMap = buildChildrenMap(couples);
+
+    forEachForestLevel(
+        rootCouples,
+        childrenMap,
+        async (couple) => {
+            if (
+                couple.naturalLanguageFolding !== undefined
+            ) {
+                markFoldStart();
+                await commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.naturalLanguageFolding.start, 'computer', 'unfolded');
+                markFoldEnd();
+            }
+            if (
+                couple.codeFolding !== undefined
+            ) {
+                markFoldStart();
+                await commands.executeCommand('editor.unfold', { selectionLines: [couple.codeFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.codeFolding.start, 'computer', 'unfolded');
+                markFoldEnd();
+            }
+        }
+    );
+}
+
+export function closeEveryRegion(editor: TextEditor, ranges: BetterFoldingRange[]) {
+    const couples = findCouples(ranges);
+    const rootCouples = couples.filter(couple => couple.nesting === 0);
+    const childrenMap = buildChildrenMap(couples);
+
+    forEachForestLevel(
+        rootCouples,
+        childrenMap,
+        async (couple) => {
+            if (
+                couple.naturalLanguageFolding !== undefined
+            ) {
+                markFoldStart();
+                await commands.executeCommand('editor.fold', { selectionLines: [couple.naturalLanguageFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.naturalLanguageFolding.start, 'computer', 'folded');
+                markFoldEnd();
+            }
+            if (
+                couple.codeFolding !== undefined
+            ) {
+                markFoldStart();
+                await commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
+                ManipulatedFoldManager.setFoldedLineStatus(editor, couple.codeFolding.start, 'computer', 'folded');
+                markFoldEnd();
+            }
+        }
+    );
+
+}
+
+export async function openComplementaryRegion(editor: TextEditor, foldingRanges: BetterFoldingRange[], contentProvider: SnapshotProvider) {
 
     const lastFolding = ManipulatedFoldManager.getLastManipulatedFolding(editor);
-    if (lastFolding === undefined) {
+    if (lastFolding === undefined || lastFolding.wasFoldedBy === 'computer') {
         return;
     }
 
-      
- //   const foldingRanges = foldingProviders.getRanges(editor.document);
+
     const foldMap = createFoldTranslationsMap(foldingRanges);
     const foundTranslation = foldMap.get(lastFolding.foldingLine);
     if (foundTranslation === undefined) {
@@ -102,20 +147,13 @@ export async function openComplementaryRegion(editor: TextEditor, foldingRanges:
     if (chosenRegion === undefined) {
         return;
     }
-    console.log('last folding');
-    console.log(lastFolding);
-    console.log('picked translation');
-    console.log(foundTranslation);
-
     if (wasTranslationUpdated(contentProvider, editor.document, foundTranslation)) {
-        await generateTranslationRegion(editor.document, foundTranslation, chosenRegion, lastFolding);
+        await generateTranslationRegion(editor, foundTranslation, chosenRegion, lastFolding);
     }
     contentProvider.saveFromDocument(editor.document);
 
-    foldUnfoldComplementaryRegion(editor, lastFolding, foundComplementaryRegion);
+    await foldUnfoldComplementaryRegion(editor, lastFolding, foundComplementaryRegion);
 
-    FoldedLinesManager.updateFoldedLines(editor);
-    //   ManipulatedFoldManager.updateFoldedLines(editor, regionRangesProvider);
 }
 
 function buildChildrenMap(
@@ -166,7 +204,7 @@ function isChild(
     );
 }
 
-async function generateTranslationRegion(document: TextDocument, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
+async function generateTranslationRegion(editor: TextEditor, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
     if (!config.getAutomaticTranslation()) {
         return;
     }
@@ -174,47 +212,61 @@ async function generateTranslationRegion(document: TextDocument, translation: La
     const closingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasFolded';
     const openingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasUnfolded';
     const openingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasUnfolded';
-
+    console.log(translation);
     if (closingCodeRegion || openingLanguageRegion) {
         if (translation.naturalLanguageFolding === undefined) {
             // generate new natural language
-            console.log('generating natural language');
-            await generateLanguageResponse(document, translation, 'genNL');
+            //           runCommandWithInfo('Generating Natural Language Region...', async () => {
+            await generateLanguageResponse(editor, translation, 'genNL');
+            //           });
         } else {
             // update natural language
-            console.log('updating natural language');
-            await generateLanguageResponse(document, translation, 'updateNL');
+          //  runCommandWithInfo('Updating Natural Language Region...', async () => {
+                await generateLanguageResponse(editor, translation, 'updateNL');
+          //  });
         }
     } else if (openingCodeRegion || closingLanguageRegion) {
         if (translation.codeFolding === undefined) {
             // Generate Code
-            console.log('generating code');
-            await generateLanguageResponse(document, translation, 'genCode');
+          //        runCommandWithInfo('Generating Code Region...', async () => {
+            await generateLanguageResponse(editor, translation, 'genCode');
+        //          });
         } else {
             // Update Code
-            console.log('updating code');
-            await generateLanguageResponse(document, translation, 'updateCode');
+           // runCommandWithInfo('Updating Code Region...', async () => {
+                await generateLanguageResponse(editor, translation, 'updateCode');
+           // });
         }
     }
 
 }
 
-function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFoldedLine, complementaryRegion: BetterFoldingRange | undefined) {
+async function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFoldedLine, complementaryRegion: BetterFoldingRange | undefined) {
     if (!config.getAutomaticFolding()) {
         return;
     }
     if (complementaryRegion === undefined) {
         return;
     }
-    const transformToRange = foldingRangeToRange(editor.document);
-    if (lastFolding.lastFoldingAction === 'wasFolded' && FoldedLinesManager.isFolded(transformToRange(complementaryRegion), editor) === true) {
-        console.log('complementary region unfolds');
-        commands.executeCommand('editor.unfold', { selectionLines: [complementaryRegion?.start] });
-        ManipulatedFoldManager.setCommandInvoked(editor, true);
-    } else if (lastFolding.lastFoldingAction === 'wasUnfolded' && FoldedLinesManager.isFolded(transformToRange(complementaryRegion), editor) === false) {
-        console.log('complementary region folds');
-        commands.executeCommand('editor.fold', { selectionLines: [complementaryRegion?.start] });
-        ManipulatedFoldManager.setCommandInvoked(editor, true);
+
+    if (lastFolding.lastFoldingAction === 'wasFolded') {
+        markFoldStart();
+        const visibleRange = editor.visibleRanges[0];
+
+        await commands.executeCommand('editor.unfold', { selectionLines: [complementaryRegion.start] });
+        ManipulatedFoldManager.setFoldedLineStatus(editor, complementaryRegion.start, 'computer', 'unfolded');
+        markFoldEnd();
+        editor.revealRange(visibleRange, TextEditorRevealType.AtTop);
+
+    } else if (lastFolding.lastFoldingAction === 'wasUnfolded') {
+        markFoldStart();
+        const visibleRange = editor.visibleRanges[0];
+
+        await commands.executeCommand('editor.fold', { selectionLines: [complementaryRegion.start] });
+        ManipulatedFoldManager.setFoldedLineStatus(editor, complementaryRegion.start, 'computer', 'folded');
+        markFoldEnd();
+        editor.revealRange(visibleRange, TextEditorRevealType.AtTop);
+
     }
 }
 
@@ -224,6 +276,7 @@ function wasTranslationUpdated(provider: SnapshotProvider, document: TextDocumen
     }
     const snapshotContent = provider.getSnapshotContentFor(document.uri);
     const documentContent = document.getText();
+
 
     if (snapshotContent === undefined) {
         return true;
@@ -280,3 +333,7 @@ function createFoldTranslationsMap(foldingRanges: BetterFoldingRange[]): Map<num
     }
     return foldMap;
 }
+function runCommandWithInfo(arg0: string, arg1: () => Promise<void>) {
+    throw new Error("Function not implemented.");
+}
+

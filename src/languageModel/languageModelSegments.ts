@@ -1,27 +1,25 @@
-import { workspace, WorkspaceEdit, LanguageModelChatMessage, LanguageModelChatResponse, lm, TextDocument, CancellationTokenSource, Range, Position } from 'vscode';
+import { workspace, WorkspaceEdit, LanguageModelChatMessage, LanguageModelChatResponse, lm, TextDocument, CancellationTokenSource, Range, Position, TextEditor, commands, TextEditorRevealType } from 'vscode';
 import { GENERATE_CODE, GENERATE_NATURAL_LANGUAGE, UPDATE_CODE, UPDATE_NATURAL_LANGUAGE } from './languageModelPrompts';
 import * as config from "../configuration";
 import { BetterFoldingRange, LanguageTranslation } from '../types';
 import { getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
 import { getRegionTokens } from '../languageTokens/languageRegionTokens';
 import { getCommentBlockTokens } from '../languageTokens/languageCommentBlockToken';
+import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldManager";
+
 
 const languageModel = config.getConfiguredLanguageModel();
 
 export async function generateLanguageResponse(
-    document: TextDocument,
+    editor: TextEditor,
     translation: LanguageTranslation,
     useCase: 'genNL' | 'updateNL' | 'genCode' | 'updateCode'
 ) {
+    const { document } = editor;
     const [languageModelInstruction, languageModelPrompt] = getLanguagePrompt(document, translation, useCase);
     if (languageModelInstruction === undefined || languageModelPrompt === undefined) {
         return;
     }
-
-    //  console.log();
-    //  console.log('Generate Language Response:');
-    //  console.log(languageModelPrompt);
-    //  console.log();
 
     let [model] = await lm.selectChatModels({
         vendor: 'copilot',
@@ -43,7 +41,7 @@ export async function generateLanguageResponse(
                 await addNewNaturalLanguageIntoDoc(document, chatResponse, translation.codeFolding);
                 break;
             case 'genCode':
-                await addNewCodeIntoDoc(document, chatResponse, translation.naturalLanguageFolding);
+                await addNewCodeIntoDoc(editor, chatResponse, translation.naturalLanguageFolding);
                 break;
             default:
                 await rewriteDocWithLanguageResponse(document, chatResponse, translation.naturalLanguageFolding, translation.codeFolding, useCase);
@@ -111,11 +109,6 @@ async function addNewNaturalLanguageIntoDoc(
     const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, codeRange.start);
     accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
 
-    //   console.log();
-    //   console.log('Add new natural language into doc');
-    //   console.log(accumulatedResponse);
-    //   console.log();
-
     edit.insert(
         document.uri,
         new Position(codeRange.start, 0),
@@ -125,24 +118,23 @@ async function addNewNaturalLanguageIntoDoc(
 }
 
 async function addNewCodeIntoDoc(
-    document: TextDocument,
+    editor: TextEditor,
     response: LanguageModelChatResponse,
     naturalLanguageRange: BetterFoldingRange | undefined
 ) {
+    const { document } = editor;
     if (naturalLanguageRange === undefined) {
         return;
     }
     const regionTokes = getRegionTokens(document);
-    const accumulatedResponse = await parseChatResponse(response);
+    let accumulatedResponse = await parseChatResponse(response);
 
-    //  console.log();
-    //  console.log('Add new code into doc');
-    //  console.log(accumulatedResponse);
-    //  console.log();
+    const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, naturalLanguageRange.start);
+    accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
 
-    const indentation = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, naturalLanguageRange.start);
 
     const edit = new WorkspaceEdit();
+
     edit.insert(
         document.uri,
         new Position(naturalLanguageRange.end, document.lineAt(naturalLanguageRange.end).text.length),
@@ -151,9 +143,16 @@ async function addNewCodeIntoDoc(
     edit.insert(
         document.uri,
         new Position(naturalLanguageRange.end + 1, 0),
-        indentation + regionTokes.start + '\n' + accumulatedResponse + '\n' + indentation + regionTokes.end
+        indent + regionTokes.start + '\n' + accumulatedResponse + '\n' + indent + regionTokes.end
     );
+
+    edit.delete(
+        document.uri,
+        new Range(naturalLanguageRange.end, document.lineAt(naturalLanguageRange.end).text.length, naturalLanguageRange.end + 1, 0)
+    );
+
     workspace.applyEdit(edit);
+    
 }
 
 
@@ -174,10 +173,6 @@ async function rewriteDocWithLanguageResponse(
     if (useCase === 'updateNL') {
         accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
     }
-    // console.log();
-    // console.log('rewrite doc with language response');
-    // console.log(accumulatedResponse);
-    // console.log();
 
     if (accumulatedResponse === "") {
         return;

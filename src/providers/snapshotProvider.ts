@@ -61,6 +61,11 @@ export class SnapshotProvider implements vscode.TextDocumentContentProvider, vsc
     return encodeURIComponent(uri.toString());
   }
 
+  public restart() {
+    this.store.clear();
+  }
+  
+
   private keyFromSnapshotUri(uri: vscode.Uri): string {
     return uri.path.startsWith("/") ? uri.path.slice(1) : uri.path;
   }

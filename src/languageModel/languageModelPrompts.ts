@@ -24,12 +24,13 @@ You are generator which would receive content of text document and you will gene
 * Do the output section with bullet points containing information about output of the code
 * If the code is very primitive, don't include bullet points
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
-* In case of language python each line in generated text should have "# " as prefix (should be commented)
+* In case of language python each line in generated text should have "# " as prefix (should be commented). Do it only if language is python. If it is any other language leave as it is.
 * If regions are nested, make top level region most comprehensive, while more nested regions would have more straightforward translation
 * Make a note of the starting and ending line index of the natural language region if it exists
 * If there is Natural Language region for the code region, generated Response should be in format: {"startLine": <position  of start of natural language region>, "endLine": <position of end of natural language region>, "text": <text of natural language>}{...}... for each region.
 * If there isn't Natural Language region for the code region, generated Response should be in format: {"line": <position of start of code region, "text": <text of natural language>}{...}... for each region
 * Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
+* Don't put JSON objects into Array. Objects in the response should be generated each right after another.
 * On every special character (/newline, backlash...) do escaping
 
 #Examples
@@ -290,6 +291,7 @@ You are generator which would receive content of text document and you will gene
 * If there isn't code region for the Natural Language region, generated Response should be in format: {"line": <position of end line of natural language region, "text": <text of code>}{...}... for each region
 * If code text already fits perfectly natural language text, don't generate format for this particular region
 * Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
+* Don't put JSON objects into Array. Objects in the response should be generated each right after another.
 * On every special character (/newline, backlash...) do escaping
 #Examples
 
@@ -1094,6 +1096,9 @@ Your role is to receive text document content and divide it among logical sectio
 * Primitive methods like getters and setters could be grouped together into region rather than individual regions
 * For each region you will remember first and last line of the code inside newly generated region
 * You will generate structured response a sequence of JSON structures {"firstLine": <first line of the code>, "lastLine": <last line of the code>}{...}.. for each region
+* Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
+* Don't put JSON objects into Array. Objects in the response should be generated each right after another.
+
 
 
 # Examples

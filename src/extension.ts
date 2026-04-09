@@ -1,11 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
-//import { generateCode, generateNaturalLanguage, updateCode } from './naturallanguage';
-import { registerSnapshotCommands } from "./comands";
+import { registerSnapshotCommands } from "./commands";
 
-import { commands, ExtensionContext, languages, window, workspace, Uri } from "vscode";
-import { CLEAR_ZEN_FOLDS_COMMAND, CONFIG_ID, CREATE_ZEN_FOLDS_COMMAND } from "./constants";
+import { ExtensionContext, languages, window, workspace, Uri } from "vscode";
+import { CONFIG_ID } from "./constants";
 import FoldingDecorator from "./decorators/foldingDecorator";
 import * as config from "./configuration";
 import RegionRangesProvider from "./providers/regionRangesProvider";
@@ -13,12 +11,12 @@ import RegionRangesProvider from "./providers/regionRangesProvider";
 import FoldedLinesManager from "./utils/classes/managers/foldedLinesManager";
 import ManipulateFoldManager from "./utils/classes/managers/manipulateFoldManager";
 
-import { ProvidersList, VisibleState } from "./types";
+import { ProvidersList } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 //import RegionCodeLensProvider from './providers/regionCodeLensProvider';
 
 import ExtendedMap from './utils/classes/extendedMap';
-import { openComplementaryRegion } from './actions/foldingaction';
+import { openComplementaryRegion } from './actions/foldingAction';
 import { getRanges } from './utils/classes/functions/utils';
 import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/snapshotProvider';
 import NLRangesProvider from './providers/nlRangesProvider';
@@ -39,49 +37,34 @@ const recentlyEditedDocs: ExtendedMap<Uri, number> = new ExtendedMap(() => -1);
 
 const snapshotProvider = new SnapshotProvider();
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ExtensionContext) {
+
+  registerContentProvider(context, snapshotProvider);
+  createSnapshots();
+
 
   context.subscriptions.push(
+    foldingDecorator,
     snapshotProvider,
-    vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshotProvider),
-    ...registerSnapshotCommands(snapshotProvider, foldingProviders)
-  );
 
-  for (const doc of vscode.workspace.textDocuments) {
-    if (doc.uri.scheme !== "file") continue;
-    if (doc.isUntitled) continue;
-
-    snapshotProvider.saveFromDocument(doc);
-  }
-
-  context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(doc => {
-      //console.log('did open');
-      //console.log(doc);
+    workspace.onDidOpenTextDocument(doc => {
       if (doc.uri.scheme !== "file") { return; }
       if (doc.isUntitled) { return; }
       if (doc.isClosed) { return; }
 
       snapshotProvider?.saveFromDocument(doc); // stores content in Map
-    })
-  );
+    }),
 
-  // Delete snapshot data when the real file is fully closed
-  context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument(doc => {
+    workspace.onDidCloseTextDocument(doc => {
       if (doc.uri.scheme !== "file") return;
-
       snapshotProvider?.deleteSnapshotFor(doc.uri);
-    })
-  );
-
-  context.subscriptions.push(
-    foldingDecorator,
+    }),
 
     workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(CONFIG_ID)) {
         restart();
         updateAllDocuments();
+        createSnapshots();
       }
     }),
 
@@ -91,9 +74,6 @@ export function activate(context: vscode.ExtensionContext) {
     }),
 
     workspace.onDidChangeTextDocument((e) => {
-      //console.log('did change');
-
-      // zenFoldingDecorator.onChange(e);
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
       if (e.contentChanges.length === 0) {
         return;
@@ -113,23 +93,27 @@ export function activate(context: vscode.ExtensionContext) {
       }
       FoldedLinesManager.updateFoldedLines(e.textEditor);
       await ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, foldingProviders);
-      if (!ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
-        return;
+      const lastFoldingAction = ManipulateFoldManager.getLastManipulatedFolding(e.textEditor);
+      //console.log('last folding action');
+      //console.log(lastFoldingAction);
+      //console.log(ManipulateFoldManager.wasLastActionFolding(e.textEditor));
+      
+      if (ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
+        const foldingRanges = await getRanges(e.textEditor.document, foldingProviders);
+        await openComplementaryRegion(e.textEditor, foldingRanges, snapshotProvider);
       }
-      if (ManipulateFoldManager.getCommandInvoked(e.textEditor)) {
-        ManipulateFoldManager.setCommandInvoked(e.textEditor, false);
-        return;
-      }
-      const foldingRanges = await getRanges(e.textEditor.document, foldingProviders);
-      await openComplementaryRegion(e.textEditor, foldingRanges, snapshotProvider);
+     
+      FoldedLinesManager.updateFoldedLines(e.textEditor);
+      await ManipulateFoldManager.updateFoldedLines(e.textEditor, foldingProviders);
+      setTimeout(async () => {
+        foldingDecorator.triggerUpdateDecorations();
+      }, 50);
     }),
   );
   registerProviders(context);
   updateAllDocuments();
-
-
+  registerSnapshotCommands(foldingProviders, snapshotProvider);
 }
-
 
 function registerProviders(context: ExtensionContext) {
 
@@ -151,7 +135,11 @@ function registerProviders(context: ExtensionContext) {
 }
 
 
-
+function registerContentProvider(context: ExtensionContext, provider: SnapshotProvider) {
+  context.subscriptions.push(
+    workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, snapshotProvider),
+  );
+}
 
 
 // Courtesy of vscode-explicit-fold,
@@ -163,25 +151,33 @@ function registerFoldingProvider(context: ExtensionContext, selector: string, pr
 }
 
 function updateAllDocuments() {
-  // bracketRangesProvider.updateAllDocuments();
   for (const e of window.visibleTextEditors) {
     foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
   }
-  //Delayed since vscode does not provide the right visible ranges right away when opening a new document.
   setTimeout(async () => {
     for (const e of window.visibleTextEditors) {
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
-      //codeLensProvider.updateRanges(e, foldingDecorator);
     }
     FoldedLinesManager.updateAllFoldedLines();
     await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
-    //zenFoldingDecorator.triggerUpdateDecorations();
-    //foldingDecorator.triggerUpdateDecorations();
+    foldingDecorator.triggerUpdateDecorations();
   }, 500);
+}
+
+function createSnapshots() {
+  for (const doc of workspace.textDocuments) {
+    if (doc.uri.scheme !== "file") continue;
+    if (doc.isUntitled) continue;
+
+    snapshotProvider.saveFromDocument(doc);
+  }
+
 }
 
 function restart() {
   foldingProviders.forEach(([_, provider]) => provider.restart());
+  snapshotProvider.restart();
+
 
   foldingDecorator?.dispose();
   foldingDecorator = new FoldingDecorator(foldingProviders);
@@ -190,6 +186,6 @@ function restart() {
 // This method is called when your extension is deactivated
 export function deactivate() {
   snapshotProvider?.dispose();
+
   foldingDecorator.dispose();
-  //  zenFoldingDecorator.dispose();
 }

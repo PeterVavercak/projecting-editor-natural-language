@@ -16,16 +16,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "nlDisplay.createOrUpdate",
-        "title": "Create or update",
-        "category": "NL Display"
-      },
-      {
-        "command": "nlDisplay.readContent",
-        "title": "Read Content",
-        "category": "NL Display"
-      },
-      {
         "command": "ProjectingNLEditor.writeNL",
         "title": "Write Natural Language",
         "category": "Projecting Natural Language Editor",
@@ -53,13 +43,14 @@
         "title": "Show Code Regions"
       },
       {
-        "command": "test.testCommand",
-        "title": "Test Command",
-        "category": "Test"
+        "command": "ProjectingNLEditor.showEveryRegion",
+        "category": "Projecting Natural Language Editor",
+        "title": "Show Every Regions"
       },
       {
-        "command": "hello-world.helloWorld",
-        "title": "Hello World"
+        "command": "ProjectingNLEditor.closeEveryRegion",
+        "category": "Projecting Natural Language Editor",
+        "title": "Close Every Regions"
       }
     ],
     "menus": {
@@ -107,7 +98,7 @@
             "Claude Sonnet 4.6"
           ],
           "default": "gpt-4o",
-          "description": "Example setting with an enum"
+          "description": "Language Model"
         },
         "projectingNaturalLanguage.automaticTranslation": {
           "type": "boolean",
@@ -118,7 +109,13 @@
           "type": "boolean",
           "default": true,
           "description": "Automatic Folding"
+        },
+        "projectingNaturalLanguage.showDecorations": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show Decorations"
         }
+        
       }
     },
     "snippets": [
@@ -154,7 +151,20 @@
         "language": "typescript",
         "path": "./snippets/typescript.json"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "nodeDependencies",
+          "name": "Node Dependencies"
+        }
+      ]
+    }
+    
+    
+      
+    
+    
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -166,11 +176,12 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
+    "@types/node": "^22.19.17",
     "@types/vscode": "^1.107.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.1",
+    "mocha": "^11.7.5",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1"
   },

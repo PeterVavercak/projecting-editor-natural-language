@@ -23,7 +23,6 @@ export default class NLRangesProvider extends BetterFoldingRangeProvider {
 
       const startPosition = document.positionAt(match.index);
       const endPosition = document.positionAt(match.index + match[0].length);
-      //  console.log('matched code region at line: ' + startPosition.line);
 
       if (startPosition.line !== endPosition.line) {
         ranges.push({

@@ -56,13 +56,15 @@ export interface NaturalLanguageRegionCouple {
   naturalLanguageFolding?: BetterFoldingRange;
 }
 
-
-
-
+export interface  FoldingRangeAction {
+  wasFoldedBy: 'user' | 'computer';
+  foldingStatus: 'folded' | 'unfolded';
+};
 export interface LastFoldedLine {
+  wasFoldedBy: 'user' | 'computer';
   lastFoldingAction: 'wasUnfolded' | 'wasFolded';
   foldingLine: number;
-}
+};
 
 export type VisibleState = {
   ranges: readonly Range[];

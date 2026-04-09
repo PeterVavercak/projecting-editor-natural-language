@@ -15,26 +15,19 @@ class FoldedLinesManager {
   private cachedFoldedLines: ExtendedMap<Uri, Set<number>> = new ExtendedMap(() => new Set());
 
   public updateAllFoldedLines() {
-    //console.log('update all folded lines for folded lines manager');
     for (const editor of window.visibleTextEditors) {
       this.updateFoldedLines(editor);
     }
   }
 
   public updateFoldedLines(editor: TextEditor) {
-    //  console.log('folding lines manager at doc: ' + editor.document.uri);
     const { visibleRanges } = editor;
     if (visibleRanges.length === 0) {
       return;
     }
-    //  console.log('visible ranges');
-    //   console.log(visibleRanges);
+
     let cachedLines = this.getFoldedLines(editor);
-    //  printSet('cached lines 1', cachedLines);
     const currentFoldedLines = visibleRanges.slice(0, -1).map((range) => range.end.line);
-   //  printSet('current folded lines', currentFoldedLines);
-
-
     if (cachedLines.size === 0) {
       this.setFoldedLines(editor, new Set(currentFoldedLines));
       return;
@@ -42,9 +35,7 @@ class FoldedLinesManager {
 
     this.matchFoldedLines(cachedLines, currentFoldedLines);
     this.matchUnfoldedLines(cachedLines, currentFoldedLines, visibleRanges);
-
     this.setFoldedLines(editor, cachedLines);
-    //printSet('cached lines 2', cachedLines);
   }
 
   private matchFoldedLines(cachedLines: Set<number>, currentFoldedLines: number[]) {
