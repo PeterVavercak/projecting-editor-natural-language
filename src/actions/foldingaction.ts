@@ -5,8 +5,9 @@ import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldMana
 import { BetterFoldingRange, NaturalLanguageRegionCouple, LanguageTranslation, LastFoldedLine, ProvidersList } from "../types";
 import { foldingRangeToRange, forEachForestLevel, forEachForestLevelReverse, getRanges, pairByRelation } from "../utils/classes/functions/utils";
 import { SnapshotProvider } from "../providers/snapshotProvider";
-import { endianness } from "os";
 import { markFoldStart, markFoldEnd } from "../utils/variables";
+import { actionMutex } from '../utils/classes/managers/actionMutex';
+
 
 
 export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: BetterFoldingRange[]) {
@@ -20,6 +21,10 @@ export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: Better
             if (
                 couple.naturalLanguageFolding !== undefined
             ) {
+
+                // console.log('Natural language at line: ' + couple.naturalLanguageFolding.start + ' unfolded');
+                //  console.log(editor.document.uri);
+                //  console.log(couple);
                 markFoldStart();
                 await commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
                 ManipulatedFoldManager.setFoldedLineStatus(editor, couple.naturalLanguageFolding.start, 'computer', 'unfolded');
@@ -28,6 +33,8 @@ export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: Better
             if (
                 couple.codeFolding !== undefined
             ) {
+                //   console.log('Code at line: ' + couple.codeFolding.start + ' folded');
+
                 markFoldStart();
                 await commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
                 ManipulatedFoldManager.setFoldedLineStatus(editor, couple.codeFolding.start, 'computer', 'folded');
@@ -148,7 +155,9 @@ export async function openComplementaryRegion(editor: TextEditor, foldingRanges:
         return;
     }
     if (wasTranslationUpdated(contentProvider, editor.document, foundTranslation)) {
-        await generateTranslationRegion(editor, foundTranslation, chosenRegion, lastFolding);
+        await actionMutex.runExclusive('Generating complementary region', async (progress) => {
+            await generateTranslationRegion(editor, foundTranslation, chosenRegion, lastFolding);
+        });
     }
     contentProvider.saveFromDocument(editor.document);
 
@@ -215,27 +224,15 @@ async function generateTranslationRegion(editor: TextEditor, translation: Langua
     console.log(translation);
     if (closingCodeRegion || openingLanguageRegion) {
         if (translation.naturalLanguageFolding === undefined) {
-            // generate new natural language
-            //           runCommandWithInfo('Generating Natural Language Region...', async () => {
-            await generateLanguageResponse(editor, translation, 'genNL');
-            //           });
+            await generateLanguageResponse(editor.document, translation, 'genNL');
         } else {
-            // update natural language
-          //  runCommandWithInfo('Updating Natural Language Region...', async () => {
-                await generateLanguageResponse(editor, translation, 'updateNL');
-          //  });
+            await generateLanguageResponse(editor.document, translation, 'updateNL');
         }
     } else if (openingCodeRegion || closingLanguageRegion) {
         if (translation.codeFolding === undefined) {
-            // Generate Code
-          //        runCommandWithInfo('Generating Code Region...', async () => {
-            await generateLanguageResponse(editor, translation, 'genCode');
-        //          });
+            await generateLanguageResponse(editor.document, translation, 'genCode');
         } else {
-            // Update Code
-           // runCommandWithInfo('Updating Code Region...', async () => {
-                await generateLanguageResponse(editor, translation, 'updateCode');
-           // });
+            await generateLanguageResponse(editor.document, translation, 'updateCode');
         }
     }
 

@@ -11,11 +11,10 @@ import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldMana
 const languageModel = config.getConfiguredLanguageModel();
 
 export async function generateLanguageResponse(
-    editor: TextEditor,
+    document: TextDocument,
     translation: LanguageTranslation,
     useCase: 'genNL' | 'updateNL' | 'genCode' | 'updateCode'
 ) {
-    const { document } = editor;
     const [languageModelInstruction, languageModelPrompt] = getLanguagePrompt(document, translation, useCase);
     if (languageModelInstruction === undefined || languageModelPrompt === undefined) {
         return;
@@ -41,7 +40,7 @@ export async function generateLanguageResponse(
                 await addNewNaturalLanguageIntoDoc(document, chatResponse, translation.codeFolding);
                 break;
             case 'genCode':
-                await addNewCodeIntoDoc(editor, chatResponse, translation.naturalLanguageFolding);
+                await addNewCodeIntoDoc(document, chatResponse, translation.naturalLanguageFolding);
                 break;
             default:
                 await rewriteDocWithLanguageResponse(document, chatResponse, translation.naturalLanguageFolding, translation.codeFolding, useCase);
@@ -114,15 +113,14 @@ async function addNewNaturalLanguageIntoDoc(
         new Position(codeRange.start, 0),
         indent + commentTokens.start + '\n' + accumulatedResponse + '\n' + indent + commentTokens.end + '\n'
     );
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
 }
 
 async function addNewCodeIntoDoc(
-    editor: TextEditor,
+    document: TextDocument,
     response: LanguageModelChatResponse,
     naturalLanguageRange: BetterFoldingRange | undefined
 ) {
-    const { document } = editor;
     if (naturalLanguageRange === undefined) {
         return;
     }
@@ -143,7 +141,7 @@ async function addNewCodeIntoDoc(
     edit.insert(
         document.uri,
         new Position(naturalLanguageRange.end + 1, 0),
-        indent + regionTokes.start + '\n' + accumulatedResponse + '\n' + indent + regionTokes.end
+        indent + regionTokes.start + '\n' + accumulatedResponse + '\n' + indent + regionTokes.end + '\n'
     );
 
     edit.delete(
@@ -151,7 +149,7 @@ async function addNewCodeIntoDoc(
         new Range(naturalLanguageRange.end, document.lineAt(naturalLanguageRange.end).text.length, naturalLanguageRange.end + 1, 0)
     );
 
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
     
 }
 
@@ -191,7 +189,7 @@ async function rewriteDocWithLanguageResponse(
         chosenRange,
         '\n' + accumulatedResponse + '\n'
     );
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
 }
 
 function getNaturalLanguageAndCodeRegionText(

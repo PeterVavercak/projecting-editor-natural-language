@@ -1,7 +1,8 @@
 {
-  "name": "code-tutor",
-  "displayName": "Code Tutor",
+  "name": "projecting-editor-nl-code",
+  "displayName": "Projecting Editor Displaying Natural Language",
   "description": "",
+  "publisher": "PeterVaverk",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.107.0"
@@ -10,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:myToolsView"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -53,18 +55,6 @@
         "title": "Close Every Regions"
       }
     ],
-    "menus": {
-      "editor/title": [
-        {
-          "command": "ProjectingNLEditor.writeNL",
-          "group": "navigation"
-        },
-        {
-          "command": "ProjectingNLEditor.writeCode",
-          "group": "navigation"
-        }
-      ]
-    },
     "configuration": {
       "title": "Settings Editor Test Extension",
       "type": "object",
@@ -114,8 +104,13 @@
           "type": "boolean",
           "default": false,
           "description": "Show Decorations"
+        },
+        "projectingNaturalLanguage.excludedLanguages": {
+          "order": 7,
+          "type": "array",
+          "default": [],
+          "markdownDescription": "List of languages to exclude from folding. \n\nExample: `['javascript', 'typescript']`."
         }
-        
       }
     },
     "snippets": [
@@ -152,19 +147,23 @@
         "path": "./snippets/typescript.json"
       }
     ],
-    "views": {
-      "explorer": [
+    "viewsContainers": {
+      "activitybar": [
         {
-          "id": "nodeDependencies",
-          "name": "Node Dependencies"
+          "id": "projecting-editor-bar",
+          "title": "Projecting Editor",
+          "icon": "resources/versions.svg"
+        }
+      ]
+    },
+    "views": {
+      "projecting-editor-bar": [
+        {
+          "id": "projectingEditorView",
+          "name": "Projecting Editor"
         }
       ]
     }
-    
-    
-      
-    
-    
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -8,7 +8,7 @@ You are generator which would receive content of text document and you will gene
 * You will be given id of language on which you would work
 * You will be given content of text document with marked number of each line
 * There are individual code regions marked by #region and #endregion
-* Each Code region can have Natural Language region right above it inside comment block or docstring of particular region with nlregion and endnlregion markers
+* Each Code region can have Natural Language region right above it inside comment block or docstring of particular region with #NaturalLanguage and #EndNaturalLanguage markers
 * For each Code region you will generate Natural Language text which would translate the code
 * You will also include nested code regions for natural language region generation
 * There may not be Natural Language region for the code region. In that case generate completely new natural language region.
@@ -37,9 +37,9 @@ You are generator which would receive content of text document and you will gene
 
 <written_text_document id = "example1">
 python
-0: #nlregion
+0: #NaturalLanguage
 1: # Prints text "hello world" into the console
-2: #endnlregion
+2: #EndNaturalLanguage
 3: #region
 4: def encode_char(character: str) -> List[bool]:
 5:     ascichar = ord(character)  # ASCII/Unicode code point
@@ -50,7 +50,7 @@ python
 10:     return bits
 11: #endregion
 12: 
-13: #nlregion
+13: #NaturalLanguage
 14: # Function to encode a string into a list of boolean lists  
 15: # ----  
 16: # - A null character ("\x00") is appended to the input string.  
@@ -65,7 +65,7 @@ python
 25: # Returns:  
 26: # - A list of boolean lists representing the encoded string.  
 27: # ----  
-28: #endnlregion
+28: #EndNaturalLanguage
 29: #region
 30: def encode_string(string: str) -> List[List[bool]]:
 31:     s = string + "\x00"
@@ -208,11 +208,11 @@ java
 
 <written_text_document = "example4">
 python
-0: #nlregion
+0: #NaturalLanguage
 1: # ----
 2: # Sum of a and b 
 3: # ----
-4: #endnlregion
+4: #EndNaturalLanguage
 5: #region
 6: product = a * b
 7: #endregion
@@ -223,9 +223,9 @@ python
 
 <written_text_document id = "example5">
 python
-0: #nlregion
+0: #NaturalLanguage
 1: # Function to read text file and put its values into 2d array
-2: #endnlregion
+2: #EndNaturalLanguage
 3: #region
 4: def read_csv_to_2d_array(filename):
 5:     data = []
@@ -243,11 +243,12 @@ python
 </assistant_response>
 
 <written_text_document id = "example6">
-0: #nlregion
+python
+0: #NaturalLanguage
 1: # ----
 2: # Prints text "hello world" into the console
 3: # ----
-4: #endnlregion
+4: #EndNaturalLanguage
 5: #region
 6: print('hello world')
 7: #endregion
@@ -256,6 +257,7 @@ python
 </assistant_response>
 
 <written_text_document = "example7">
+python
 0: #region
 1: text = 'hello world'
 2: for i in text:
@@ -277,7 +279,7 @@ You are generator which would receive content of text document and you will gene
 
 * You will be given id of language on which you would wor
 * You will be given content of text document with marked number of each line
-* There are individual natural language regions inside comment blocks or docstring with nlregion and endnlregion markers
+* There are individual natural language regions inside comment blocks or docstring with #NaturalLanguage and #EndNaturalLanguage markers
 * Each Natural Language region can have Code region right below it with #region and #endregion markers
 * For each Natural Language region you will generate Code which would translate the Natural Language text
 * There may not be Code region for the Natural Language region. In that case generate completely new code region.
@@ -296,9 +298,10 @@ You are generator which would receive content of text document and you will gene
 #Examples
 
 <written_text_document id = "example1">
-0: #nlregion
+python
+0: #NaturalLanguage
 1: # Vigenere encryption function that encrypts a message using a key.
-2: #endnlregion
+2: #EndNaturalLanguage
 3: #region
 4: def encrypt_vigenere(msg, key):
 5:     encrypted_text = []
@@ -315,9 +318,9 @@ You are generator which would receive content of text document and you will gene
 16:     return "".join(encrypted_text)
 17: #endregion
 18: 
-19: #nlregion
+19: #NaturalLanguage
 20: # vigenere decryption function that decrypts a message using a key
-21: #endnlregion
+21: #EndNaturalLanguage
 22: #region
 23: def encrypt_vigenere(msg, key):
 24:     encrypted_text = []
@@ -334,9 +337,9 @@ You are generator which would receive content of text document and you will gene
 35:     return "".join(encrypted_text)
 36: #endregion
 37: 
-38: #nlregion
+38: #NaturalLanguage
 39: # Caesar encryption function that encrypts a message using a key.
-40: #endnlregion
+40: #EndNaturalLanguage
 41: #region
 42: def xor_encrypt(text, key):
 43:     result = ""
@@ -345,9 +348,9 @@ You are generator which would receive content of text document and you will gene
 46:     return result
 47: #endregion
 48: 
-49: #nlregion
+49: #NaturalLanguage
 50: # Caesar decryption function that decrypts a message using a key
-51: #endnlregion
+51: #EndNaturalLanguage
 </written_text_document>
 <assistant_response id = "example1">
 {"firstLine": 23, "lastLine" 36, "text": 
@@ -361,9 +364,10 @@ You are generator which would receive content of text document and you will gene
 
 
 <written_text_document id = "example2">
-0: #nlregion
+python
+0: #NaturalLanguage
 1: # Function to read excel file and put its values into 2d array 
-2: #endnlregion
+2: #EndNaturalLanguage
 3: #region
 4: def read_csv_to_2d_array(filename):
 5:     data = []
@@ -382,9 +386,10 @@ You are generator which would receive content of text document and you will gene
 </assistant_response>
 
 <written_text_document id = "example3">
-0: #nlregion
+python
+0: #NaturalLanguage
 1: # Sum of a and b 
-2: #endnlregion
+2: #EndNaturalLanguage
 3: #region
 4: product = a * b
 5: #endregion
@@ -394,11 +399,12 @@ You are generator which would receive content of text document and you will gene
 </assistant_response>
 
 <written_text_document id = "example4">
-0: #nlregion
+python
+0: #NaturalLanguage
 1: # ----
 2: # Prints text "hello world" into the console
 3: # ----
-4: #endnlregion
+4: #EndNaturalLanguage
 5: #region
 6: print('hello world')
 7: #endregion
@@ -407,7 +413,8 @@ You are generator which would receive content of text document and you will gene
 </assistant_response>
 
 <written_text_document id = "example5">
-0: /*nlregion
+java
+0: /*#NaturalLanguage
 1: ----
 2: Class to perform statistical calculations on an array of doubles
 3: ----
@@ -427,7 +434,7 @@ You are generator which would receive content of text document and you will gene
 17: Output:
 18: - Mean, minimum, and maximum values of the data array
 19: ----
-20: endnlregion*/
+20: #EndNaturalLanguage*/
 21: //#region
 22: public class StatisticsCalculator {
 23:     private double[] data;
@@ -436,17 +443,17 @@ You are generator which would receive content of text document and you will gene
 26:         this.data = data;
 27:     }
 28: 
-29:     /*nlregion
+29:     /*#EndNaturalLanguage
 30:     Calculates the mean of an array of data
-31:     endnlregion*/
+31:     #EndNaturalLanguage*/
 32:     //#region
 33:     //#endregion
 34: 
 35:     
 36: 
-37:     /*nlregion
+37:     /*#NaturalLanguage
 38:     Finds the maximum value in an array of doubles
-39:     endnlregion*/
+39:     #EndNaturalLanguage*/
 40:     //#region
 41:     public double findMin() {
 42:         double min = data[0];
@@ -460,9 +467,9 @@ You are generator which would receive content of text document and you will gene
 50:     }
 51:     //#endregion
 52:     
-53:     /*nlregion
+53:     /*#NaturalLanguage
 54:     Finds the maximum value in an array of doubles
-55:     endnlregion*/
+55:     #EndNaturalLanguage*/
 56: 
 57: 
 58: }
@@ -505,6 +512,7 @@ You are translator. Your role is to translate given code into text in natural la
 # Examples
 
 <lm_prompt_code id = "example1">
+python
 #region
 print('Hello, World!')
 #endregion
@@ -518,6 +526,7 @@ print('Hello, World!')
 </lm_response_natural_language>
 
 <lm_prompt_code id = "example2">
+python
 #region
 a = 4
 b = 6
@@ -538,6 +547,7 @@ sum a + b
 </lm_response_natural_language >
 
 <lm_prompt_code id = "example3">
+python
 #region
 text = 'hello world'
 for i in text:
@@ -555,6 +565,7 @@ for i in text:
 </lm_response_natural_language >
 
 <lm_prompt_code id = "example4">
+python
 #region
 def promote(self, amount):
     # salary
@@ -575,6 +586,7 @@ def promote(self, amount):
 </lm_response_natural_language>
 
 <lm_prompt_code id = "example5">
+python
 #region
 # insert text into list of lines
 def add_string(lines, new_text, position_char, position_line):
@@ -638,7 +650,7 @@ You are updating translator. Your role is to update text in natural language acc
 # Instruction
 
 * You will be given id of language on which you would work
-* You will be given both natural language description inside docstring with nlregion/endnlregion markers and code in #region/#endregion markers
+* You will be given both natural language description inside docstring with #NaturalLanguage/#EndNaturalLanguage markers and code in #region/#endregion markers
 * You will return updated natural language segment so it would fit the code you have been provided
 * Do as minimal changes possible to the natural language segment describing the code
 * If Natural Language segment doesn't describe code at all, generate completely new natural language segment so it would fit the code
@@ -659,11 +671,12 @@ You are updating translator. Your role is to update text in natural language acc
 # Examples
 
 <lm_prompt_natural_language_and_code id = "example1">
-#nlregion
+python
+#NaturalLanguage
 # ----
 # Prints text "hello world" into the console
 # ----
-#endnlregion
+#EndNaturalLanguage
 #region
 print('hello world')
 #endregion
@@ -672,11 +685,12 @@ print('hello world')
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example2">
-#nlregion
+python
+#NaturalLanguage
 # ----
 # Sum of a and b 
 # ----
-#endnlregion
+#EndNaturalLanguage
 #region
 product = a * b
 #endregion
@@ -688,9 +702,10 @@ product = a * b
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example3">
-#nlregion
+python
+#NaturalLanguage
 # Function to read text file and put its values into 2d array
-#endnlregion
+#EndNaturalLanguage
 #region
 def read_csv_to_2d_array(filename):
     data = []
@@ -708,14 +723,15 @@ def read_csv_to_2d_array(filename):
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example4">
-#nlregion
+python
+#NaturalLanguage
 # Function to pair elements from two list into one by relation
 # ----
 #     - function has relation input parameter which would determine relation between paired elements
 #     - elements from first list are put into first place of pairs and elements from second list are put into second place
 #     - elements without pair from first or second list are paired with 'None' element
 # ----
-#endnlregion
+#EndNaturalLanguage
 #region
 def add_string(lines, new_text, position_char, position_line):
     new_lines = lines.copy()
@@ -771,7 +787,8 @@ def add_string(lines, new_text, position_char, position_line):
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example5">
-#nlregion
+python
+#NaturalLanguage
 # ----
 # Prints progressively larger substrings of the text "hello world"
 # ----
@@ -786,7 +803,7 @@ def add_string(lines, new_text, position_char, position_line):
 # Output:
 # - Substrings of 'text' printed progressively, starting from an empty string up to the full text minus the last character. 
 # ----
-#endnlregion
+#EndNaturalLanguage
 #region
 text = 'hello world'
 for i in range(len(text)):
@@ -797,9 +814,10 @@ for i in range(len(text)):
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code = "example6">
-#nlregion
+python
+#NaturalLanguage
 # Prints hello world
-#endnlregion
+#EndNaturalLanguage
 #region
 text = 'hello world'
 for i in text:
@@ -825,7 +843,7 @@ You are translator. Your role is to translate given text in natural language int
 # Instructions
 
 * You will be given id of language on which you would work
-* You take text inside quoted region with nlregion and endnlregion marking as prompt in natural language
+* You take text inside quoted region with #NaturalLanguage and #EndNaturalLanguage marking as prompt in natural language
 * You will return text of code in defined language
 * Code returned should have all information from prompt included
 * If the text in natural language is written incorrectly, try to decode it
@@ -834,18 +852,20 @@ You are translator. Your role is to translate given text in natural language int
 # Examples
 
 <lm_prompt_natural_language id = "example1">
-#nlregion
+python
+#NaturalLanguage
 # Product of a and b
-#endnlregion
+#EndNaturalLanguage
 </lm_prompt_natural_language>
 <lm_response_code id = "example1">
 product = a * b
 </lm_response_code>
 
 <lm_prompt_natural_language id = "example2">
-#nlregion
+python
+#NaturalLanguage
 # Pascal triangle function
-#endnlregion
+##EndNaturalLanguage
 </lm_prompt_natural_language>
 <lm_response_code id = "example2">
 def pascals_triangle(rows):
@@ -862,14 +882,15 @@ def pascals_triangle(rows):
 </lm_response_code>
 
 <lm_prompt_natural_language id = "example3">
-#nlregion
+python
+#NaturalLanguage
 # Function to pair elements from two list into one by relation
 # ----
 #     - function has relation input parameter which would determine relation between paired elements
 #     - elements from first list are put into first place of pairs and elements from second list are put into second place
 #     - elements without pair from first or second list are paired with 'None' element
 # ----
-#endnlregion
+#EndNaturalLanguage
 </lm_prompt_natural_language>
 <lm_response_code id = "example3">
 T = TypeVar("T")
@@ -903,6 +924,142 @@ def pair_by_relation(
     return result
 </lm_response_code>
 
+<lm_prompt_natural_language = "example4">
+java
+/*#NaturalLanguage
+----
+Class representing a road connecting two destinations with paths
+----
+- Each road has a unique index, two destinations, and a set of path tiles.
+- Provides methods to manage paths, check connectivity, and handle disconnection.
+
+----
+Methods:
+- 'Road(int roadIndex, int[][] positions, Tile[][] tiles)': Constructor initializes the road with destinations and path tiles.
+- 'getPathIterator()': Returns an iterator for the path tiles.
+- 'addPath(Path path)': Adds a path to the road.
+- 'removePath(Path path)': Removes a path from the road.
+- 'getRoadIndex()': Returns the road's index.
+- 'getDestination1()' and 'getDestination2()': Return the two destinations.
+- 'isConnected()': Checks if the road is fully connected.
+- 'completeDestinations()': Marks destinations as connected if the road is fully connected.
+- 'disconnectAllTiles()': Disconnects all tiles and paths associated with the road.
+- 'disconnectFollowingTiles(Connectable tile)': Disconnects tiles following a specific tile.
+
+----
+Returns:
+- 'isConnected': Boolean indicating if the road is fully connected.
+- 'getPathIterator': Iterator for the path tiles.
+----
+#EndNaturalLanguage*/
+</lm_prompt_natural_language>
+<lm_response_code id = "example4">
+
+public class Road {
+    private final int roadIndex;
+    private final Destination destination1;
+    private final Destination destination2;
+    private final HashSet<Path> pathTiles;
+
+    Road(int roadIndex, int[][] positions, Tile[][] tiles){
+        this.roadIndex = roadIndex;
+
+        int destination1Row = positions[0][0];
+        int destination1Column = positions[0][1];
+        this.destination1 = new Destination(this, destination1Row, destination1Column);
+        tiles[destination1Row][destination1Column] = destination1;
+
+        int destination2Row = positions[1][0];
+        int destination2Column = positions[1][1];
+        this.destination2 = new Destination(this, destination2Row, destination2Column);
+        tiles[destination2Row][destination2Column] = destination2;
+
+        this.pathTiles = new HashSet<>();
+
+    }
+
+    public Iterator<Path> getPathIterator() {
+        return pathTiles.iterator();
+    }
+
+    public void addPath(Path path){
+        pathTiles.add(path);
+    }
+
+    public void removePath(Path path){
+        pathTiles.remove(path);
+    }
+
+    public int getRoadIndex() {
+        return roadIndex;
+    }
+    public Destination getDestination1() {
+        return destination1;
+    }
+    public Destination getDestination2() {
+        return destination2;
+    }
+
+    private boolean isConnected(){
+        Iterator<Path> iterator = getPathIterator();
+        while(iterator.hasNext()){
+            Path path = iterator.next();
+            if(path.getState() != PathState.FULLYCONNECTED) {
+                return false;
+            }
+        }
+        return getDestination1().getState() == DestinationState.USING && getDestination2().getState() == DestinationState.USING;
+    }
+
+    public void completeDestinations(){
+        if(isConnected()){
+            getDestination1().setStateConnected();
+            getDestination2().setStateConnected();
+        }
+    }
+
+    public void disconnectAllTiles(){
+        getDestination1().getsDisconnected();
+        getDestination2().getsDisconnected();
+        Iterator<Path> iterator = getPathIterator();
+        while(iterator.hasNext()){
+            Path path = iterator.next();
+            path.getsDisconnected();
+            iterator.remove();
+        }
+
+    }
+
+    public void disconnectFollowingTiles(Connectable tile){
+        if(!(tile instanceof Path) ){
+            return;
+        }
+        Path path  = (Path) tile;
+        Connectable usedTile = tile;
+        if(path.getState() != PathState.FULLYCONNECTED){
+            return;
+        }
+        Connectable nextTile = (Connectable) path.getNextConnectedTile();
+        while(nextTile instanceof Path ) {
+            path = (Path) nextTile;
+            usedTile = nextTile;
+            nextTile = (Connectable) path.getNextConnectedTile();
+            removePath(path);
+            usedTile.getsDisconnected();
+            if(nextTile == tile){
+                break;
+            }
+
+        }
+        if(nextTile instanceof Destination){
+            getDestination2().setStateUsing();
+            getDestination1().setStateUsing();
+            nextTile.getsDisconnected();
+        }
+    }
+}
+</lm_response_code id>
+
 
 `;
 export const UPDATE_CODE = ` 
@@ -913,7 +1070,7 @@ You are updating translator. Your role is to update code according to given natu
 # Instructions
 
 * You will be given id of language on which you would work
-* You will be given both natural language description inside docstring with nlregion/endnlregion markers and code in #region/#endregion markers
+* You will be given both natural language description inside docstring with #NaturalLanguage/#EndNaturalLanguage markers and code in #region/#endregion markers
 * If the text in natural language is written incorrectly, try to decode it
 * You will return updated code so it would fit the natural language segment you have been provided
 * Do as minimal changes possible to the code describing the natural language segment
@@ -924,11 +1081,12 @@ You are updating translator. Your role is to update code according to given natu
 # Examples
 
 <lm_prompt_natural_language_and_code id = "example1">
-#nlregion
+python
+#NaturalLanguage
 # ----
 # Prints text "hello world" into the console
 # ----
-#endnlregion
+#EndNaturalLanguage
 #region
 print('hello world')
 #endregion
@@ -937,9 +1095,10 @@ print('hello world')
 </lm_response_code>
 
 <lm_prompt_natural_language_and_code id = "example2">
-#nlregion
+python
+#NaturalLanguage
 # Sum of a and b 
-#endnlregion
+#EndNaturalLanguage
 #region
 product = a * b
 #endregion
@@ -949,9 +1108,10 @@ sum = a + b
 </lm_response_code>
 
 <lm_prompt_natural_language_and_code id = "example3">
-#nlregion
+python
+#NaturalLanguage
 # Function to read excel file and put its values into 2d array 
-#endnlregion
+#EndNaturalLanguage
 #region
 def read_csv_to_2d_array(filename):
     data = []
@@ -978,14 +1138,15 @@ def read_excel_to_2d_array(filename, sheet_name=None):
 </lm_response_code>
 
 <lm_prompt_natural_language_and_code id = "example4">
-#nlregion
+python
+#NaturalLanguage
 # Function to pair elements from two list into one by relation
 # ----
 #     - function has relation input parameter which would determine relation between paired elements
 #     - elements from first list are put into first place of pairs and elements from second list are put into second place
 #     - elements without pair from first or second list are paired with 'None' element
 # ----
-#endnlregion
+#EndNaturalLanguage
 #region
 def add_string(lines, new_text, position_char, position_line):
     new_lines = lines.copy()
@@ -1055,7 +1216,8 @@ def pair_by_relation(
 
 
 <lm_prompt_natural_language_and_code id = "example5">
-#nlregion
+python
+#NaturalLanguage
 # ----
 # Prints progressively larger substrings of the text "hello world"
 # ----
@@ -1070,7 +1232,7 @@ def pair_by_relation(
 # Output:
 # - Substrings of 'text' printed progressively, starting from an empty string up to the full text minus the last character. 
 #----
-#endnlregion
+#EndNaturalLanguage
 #region
 text = 'hello world'
 for i in range(len(text)):
@@ -1079,6 +1241,144 @@ for i in range(len(text)):
 </lm_prompt_natural_language_and_code>
 <lm_response_code id = "example5">
 </lm_response_code>
+
+<lm_prompt_natural_language = "example6">
+java
+/*#NaturalLanguage
+----
+Class representing a road connecting two destinations with paths
+----
+- Each road has a unique index, two destinations, and a set of path tiles.
+- Provides methods to manage paths, check connectivity, and handle disconnection.
+
+----
+Methods:
+- 'Road(int roadIndex, int[][] positions, Tile[][] tiles)': Constructor initializes the road with destinations and path tiles.
+- 'getPathIterator()': Returns an iterator for the path tiles.
+- 'addPath(Path path)': Adds a path to the road.
+- 'removePath(Path path)': Removes a path from the road.
+- 'getRoadIndex()': Returns the road's index.
+- 'getDestination1()' and 'getDestination2()': Return the two destinations.
+- 'isConnected()': Checks if the road is fully connected.
+- 'completeDestinations()': Marks destinations as connected if the road is fully connected.
+- 'disconnectAllTiles()': Disconnects all tiles and paths associated with the road.
+- 'disconnectFollowingTiles(Connectable tile)': Disconnects tiles following a specific tile.
+
+----
+Returns:
+- 'isConnected': Boolean indicating if the road is fully connected.
+- 'getPathIterator': Iterator for the path tiles.
+----
+#EndNaturalLanguage*/
+#region
+public class Road {
+    private final int roadIndex;
+    private final Destination destination1;
+    private final Destination destination2;
+    private final HashSet<Path> pathTiles;
+
+    Road(int roadIndex, int[][] positions, Tile[][] tiles){
+        this.roadIndex = roadIndex;
+
+        int destination1Row = positions[0][0];
+        int destination1Column = positions[0][1];
+        this.destination1 = new Destination(this, destination1Row, destination1Column);
+        tiles[destination1Row][destination1Column] = destination1;
+
+        int destination2Row = positions[1][0];
+        int destination2Column = positions[1][1];
+        this.destination2 = new Destination(this, destination2Row, destination2Column);
+        tiles[destination2Row][destination2Column] = destination2;
+
+        this.pathTiles = new HashSet<>();
+
+    }
+
+    public Iterator<Path> getPathIterator() {
+        return pathTiles.iterator();
+    }
+
+    public void addPath(Path path){
+        pathTiles.add(path);
+    }
+
+    public void removePath(Path path){
+        pathTiles.remove(path);
+    }
+
+    public int getRoadIndex() {
+        return roadIndex;
+    }
+    public Destination getDestination1() {
+        return destination1;
+    }
+    public Destination getDestination2() {
+        return destination2;
+    }
+
+    private boolean isConnected(){
+        Iterator<Path> iterator = getPathIterator();
+        while(iterator.hasNext()){
+            Path path = iterator.next();
+            if(path.getState() != PathState.FULLYCONNECTED) {
+                return false;
+            }
+        }
+        return getDestination1().getState() == DestinationState.USING && getDestination2().getState() == DestinationState.USING;
+    }
+
+    public void completeDestinations(){
+        if(isConnected()){
+            getDestination1().setStateConnected();
+            getDestination2().setStateConnected();
+        }
+    }
+
+    public void disconnectAllTiles(){
+        getDestination1().getsDisconnected();
+        getDestination2().getsDisconnected();
+        Iterator<Path> iterator = getPathIterator();
+        while(iterator.hasNext()){
+            Path path = iterator.next();
+            path.getsDisconnected();
+            iterator.remove();
+        }
+
+    }
+
+    public void disconnectFollowingTiles(Connectable tile){
+        if(!(tile instanceof Path) ){
+            return;
+        }
+        Path path  = (Path) tile;
+        Connectable usedTile = tile;
+        if(path.getState() != PathState.FULLYCONNECTED){
+            return;
+        }
+        Connectable nextTile = (Connectable) path.getNextConnectedTile();
+        while(nextTile instanceof Path ) {
+            path = (Path) nextTile;
+            usedTile = nextTile;
+            nextTile = (Connectable) path.getNextConnectedTile();
+            removePath(path);
+            usedTile.getsDisconnected();
+            if(nextTile == tile){
+                break;
+            }
+
+        }
+        if(nextTile instanceof Destination){
+            getDestination2().setStateUsing();
+            getDestination1().setStateUsing();
+            nextTile.getsDisconnected();
+        }
+    }
+}
+#endregion
+</lm_prompt_natural_language>
+<lm_response_code id = "example6">
+</lm_response_code id>
+
 
 `;
 export const GENERATE_REGIONS = `
@@ -1103,6 +1403,7 @@ Your role is to receive text document content and divide it among logical sectio
 
 # Examples
 <written_text_document = "example1">
+java
 1: public class StatisticsCalculator {
 2:     private double[] data;
 3: 
@@ -1130,6 +1431,7 @@ Your role is to receive text document content and divide it among logical sectio
 { "firstLine": 9, "lastLine": 18}
 
 <written_text_document id = "example2">
+java
 0: package sk.tuke.gamestudio.NumberLink.Core;
 1: 
 2: import java.util.HashSet;
@@ -1252,6 +1554,7 @@ Your role is to receive text document content and divide it among logical sectio
 
 
 <written_text_document = "example3">
+python
 0: def encode_char(character: str) -> List[bool]:
 1:     ascichar = ord(character)  # ASCII/Unicode code point
 2:     bits = [False] * 8

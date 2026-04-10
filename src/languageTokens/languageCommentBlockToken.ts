@@ -2,8 +2,8 @@ import { TextDocument } from "vscode";
 import { RegionTokens } from "../types";
 
 const DEFAULT_COMMENT_BLOCK_CONFIG: RegionTokens = {
-  start: '/*#nlregion',
-  end: '#endnlregion*/',
+  start: '/*#NaturalLanguage',
+  end: '#EndNaturalLanguage*/',
 };
 
 export function getCommentBlockTokens(document: TextDocument): RegionTokens {
@@ -13,28 +13,28 @@ export function getCommentBlockTokens(document: TextDocument): RegionTokens {
 
 export const NATURAL_LANGUAGE_BLOCK: Record<string, RegionTokens> = {
   python: {
-    start: '#nlregion',
-    end: '#endnlregion',
+    start: 'NaturalLanguage',
+    end: '#EndNaturalLanguage',
     lineComment: '#',
   },
   javascript: {
-    start: '/*#nlregion',
-    end: '#endnlregion*/',
+    start: '/*#NaturalLanguage',
+    end: '#EndNaturalLanguage*/',
     lineComment: '//',
   },
   typescript: {
-    start: '/*#nlregion',
-    end: '#endlregion*/',
+    start: '/*#NaturalLanguage',
+    end: '#EndNaturalLanguage*/',
     lineComment: '//',
   },
   java: {
-    start: '/*#nlregion',
-    end: '#endnlregion*/',
+    start: '/*#NaturalLanguage',
+    end: '#EndNaturalLanguage*/',
     lineComment: '//',
   },
   csharp: {
-    start: '/*#nlregion',
-    end: '#endnlregion*/',
+    start: '/*#NaturalLanguage',
+    end: '#EndNaturalLanguage*/',
     lineComment: '//',
   },
 };

@@ -76,7 +76,7 @@ export async function clearDocument(document: TextDocument, ranges: BetterFoldin
       }
     }
   }
-  workspace.applyEdit(edit);
+  await workspace.applyEdit(edit);
 }
 
 
@@ -307,4 +307,11 @@ async function runCommandWithInfo(commandName: string, action: () => Promise<voi
       await action();
     }
   );
+}
+
+export function capitalizeSafe(str: string | undefined): string | undefined {
+  if(str === undefined){
+    return undefined;
+  }
+  return str.replace(/\b\p{L}/gu, char => char.toUpperCase());
 }

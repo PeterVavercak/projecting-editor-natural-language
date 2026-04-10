@@ -28,7 +28,8 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
               kind: FoldingRangeKind.Region,
               startColumn: document.lineAt(node.startLine).firstNonWhitespaceCharacterIndex,
               foldingType: 'code',
-              nestingLevel: node.nestingLevel
+              nestingLevel: node.nestingLevel,
+              collapsedText: node.name
             }
           );
         }

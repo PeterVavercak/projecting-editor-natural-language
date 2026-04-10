@@ -24,6 +24,7 @@ export class SnapshotProvider implements vscode.TextDocumentContentProvider, vsc
   }
 
   saveFromDocument(doc: vscode.TextDocument): vscode.Uri {
+    console.log('document saved');
     const key = this.keyFromDocumentUri(doc.uri);
     this.store.set(key, doc.getText());
     const snapUri = vscode.Uri.parse(`${SNAPSHOT_SCHEME}:/${key}`);

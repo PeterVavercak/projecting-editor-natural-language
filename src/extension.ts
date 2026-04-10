@@ -20,6 +20,7 @@ import { openComplementaryRegion } from './actions/foldingAction';
 import { getRanges } from './utils/classes/functions/utils';
 import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/snapshotProvider';
 import NLRangesProvider from './providers/nlRangesProvider';
+import { ToolsProvider } from "./providers/toolsProvider";
 
 //const bracketRangesProvider = new BracketRangesProvider();
 
@@ -27,7 +28,7 @@ const foldingProviders: ProvidersList = [
   ["*", new RegionRangesProvider()],
   ["*", new NLRangesProvider()]
 ];
-
+let toolsProvider = new ToolsProvider();
 let foldingDecorator = new FoldingDecorator(foldingProviders);
 
 const registeredLanguages = new Set<string>();
@@ -38,6 +39,13 @@ const recentlyEditedDocs: ExtendedMap<Uri, number> = new ExtendedMap(() => -1);
 const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: ExtensionContext) {
+
+  
+  const treeView = window.createTreeView('projectingEditorView', {
+    treeDataProvider: toolsProvider,
+    showCollapseAll: true
+  });
+   context.subscriptions.push(treeView);
 
   registerContentProvider(context, snapshotProvider);
   createSnapshots();

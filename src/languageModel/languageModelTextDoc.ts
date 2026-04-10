@@ -40,13 +40,10 @@ export async function generateStructuredOutputResponse(document: TextDocument, u
         );
         if (useCase === 'genNL') {
             await writeNaturalLanguages(chatResponse, document);
-            //await logOutputs(chatResponse, document);
         } else if (useCase === 'genCode') {
             await writeCodes(chatResponse, document);
-            //await logOutputs(chatResponse, document);
         } else {
             await divideDocument(chatResponse, document);
-            //await logOutputs(chatResponse, document);
         }
     }
 
@@ -87,7 +84,7 @@ async function writeNaturalLanguages(
 
         }
     }
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
 }
 
 
@@ -124,7 +121,7 @@ async function writeCodes(
             );
         }
     }
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
 }
 
 
@@ -163,7 +160,7 @@ async function divideDocument(
         }
 
     }
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
 
 }
 
@@ -200,7 +197,7 @@ async function logOutputs(
         new Position(0, 0),
         accumulatedResponse2
     );
-    workspace.applyEdit(edit);
+    await workspace.applyEdit(edit);
 
 }
 

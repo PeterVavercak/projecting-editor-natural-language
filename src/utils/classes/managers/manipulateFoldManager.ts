@@ -94,7 +94,7 @@ class ManipulateFoldManager {
     this.cachedDifferentLastFolding.set(editor.document.uri, false);
   }
 
-
+;
 
   public getCachedFoldingStatus(editor: TextEditor): Map<number, FoldingRangeAction> {
     return this.cachedFoldingStatus.get(editor.document.uri);

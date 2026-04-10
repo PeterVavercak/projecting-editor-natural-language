@@ -1,7 +1,7 @@
 import { Range, TextDocument, TextEditor, Uri, window, FoldingRangeKind } from "vscode";
 import { BetterFoldingRange, DecorationsRecord, ProvidersList } from "../types";
 import ExtendedMap from "../utils/classes/extendedMap";
-import { foldingRangeToRange, groupArrayToMap, rangeToInlineRange, unfoldedRangeToInlineRangeFirstLine, unfoldedRangeToInlineRangeLastLine } from "../utils/classes/functions/utils";
+import { capitalizeSafe, foldingRangeToRange, groupArrayToMap, rangeToInlineRange, unfoldedRangeToInlineRangeFirstLine, unfoldedRangeToInlineRangeLastLine } from "../utils/classes/functions/utils";
 import * as config from "../configuration";
 import FoldedLinesManager from "../utils/classes/managers/foldedLinesManager";
 import { DEFAULT_COLLAPSED_TEXT } from "../constants";
@@ -60,25 +60,12 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
     return ranges;
   }
 
-  private addToDecorations(foldingRanges: BetterFoldingRange[], decorations: DecorationsRecord): DecorationsRecord {
-    for (const foldingRange of foldingRanges) {
-      const collapsedText = foldingRange.collapsedText ?? DEFAULT_COLLAPSED_TEXT;
-      const id = foldingRange.id?.toString() ?? '0';
-      if (!(collapsedText in decorations)) {
-        const newDecorationOptions = this.newDecorationOptions(collapsedText);
-        decorations[id] = window.createTextEditorDecorationType(newDecorationOptions);
-      }
-    }
-
-    return decorations;
-  }
-
   private addToRegionDecorations(foldingRanges: BetterFoldingRange[], decorations: DecorationsRecord): DecorationsRecord {
     const foldingRegionRanges = foldingRanges.filter(range => range.kind === FoldingRangeKind.Region);
     for (const foldingRange of foldingRanges) {
       const firstLine = foldingRange.start.toString();
       if (!(firstLine in decorations)) {
-        const newDecorationOptions = this.newDecorationOptions(foldingRange.foldingType ?? '');
+        const newDecorationOptions = this.newDecorationOptions(foldingRange.collapsedText ?? capitalizeSafe(foldingRange.foldingType) ?? '');
         decorations[firstLine] = window.createTextEditorDecorationType(newDecorationOptions);
       }
     }
@@ -86,14 +73,7 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
     return decorations;
   }
 
-  private applyDecoration(editor: TextEditor) {
-    const decorationOption = this.newDecorationOptions('');
-    const decoration = window.createTextEditorDecorationType(decorationOption);
 
-    const inlineFoldedRanges: readonly Range[] = [new Range(10, 0, 10, 10)];
-    editor.setDecorations(decoration, inlineFoldedRanges);
-
-  }
 
   private applyDecorations(editor: TextEditor, foldingRanges: BetterFoldingRange[], decorations: DecorationsRecord) {
     const collapsedTextToFoldingRanges = groupArrayToMap(
@@ -142,10 +122,6 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
 
   private getRegionDecorations(editor: TextEditor): DecorationsRecord {
     return this.regionDecorations.get(editor.document.uri);
-  }
-
-  private getUnfoldedDecorationsLast(editor: TextEditor): DecorationsRecord {
-    return this.unfoldedDecorationsLast.get(editor.document.uri);
   }
 
   public dispose() {
