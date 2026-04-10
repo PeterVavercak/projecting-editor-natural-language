@@ -222,19 +222,7 @@ export function getRegionText(
   return document.getText(new Range(foldingRange.start, 0, foldingRange.end, document.lineAt(foldingRange.end).text.length));
 }
 
-export function getMaxObject<T>(arr: T[], selector: (item: T) => number | null | undefined): T | null {
-  return arr.reduce<T | null>((max, item) => {
-    const val = selector(item);
-    if (val == null) return max;
 
-    if (max == null) return item;
-
-    const maxVal = selector(max);
-    if (maxVal == null || val > maxVal) return item;
-
-    return max;
-  }, null);
-}
 
 export function forEachForestLevel<T>(
   roots: T[],

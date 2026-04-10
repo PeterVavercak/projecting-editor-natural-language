@@ -12,7 +12,6 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
     return ranges;
   }
 
-
   private buildFoldingRanges(document: TextDocument): BetterFoldingRange[] {
     const regions = this.parseNestedRegionsByLines(document);
     const result: BetterFoldingRange[] = [];
@@ -78,9 +77,7 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
         current.endLine = i;
       }
-
     }
-
     return roots;
   }
 }

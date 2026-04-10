@@ -56,7 +56,6 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
       const providerRanges = await provider.provideFoldingRanges(document);
       ranges.push(...providerRanges);
     }
-
     return ranges;
   }
 
@@ -69,11 +68,8 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
         decorations[firstLine] = window.createTextEditorDecorationType(newDecorationOptions);
       }
     }
-
     return decorations;
   }
-
-
 
   private applyDecorations(editor: TextEditor, foldingRanges: BetterFoldingRange[], decorations: DecorationsRecord) {
     const collapsedTextToFoldingRanges = groupArrayToMap(
@@ -81,43 +77,17 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
       (foldingRange) => foldingRange.start.toString(),
       DEFAULT_COLLAPSED_TEXT
     );
-    // console.log('apply decorations');
-    // console.log(foldingRanges);
-    // console.log(collapsedTextToFoldingRanges);
-    // console.log(decorations);
-    // console.log('end of apply decorations');
 
     for (const [collapsedText, decoration] of Object.entries(decorations)) {
       const foldingRanges = collapsedTextToFoldingRanges.get(collapsedText)!;
       if (!foldingRanges) continue;
       const ranges: Range[] = foldingRanges.map(foldingRangeToRange(editor.document));
 
-      // const unfoldedRanges: Range[] = ranges.filter((range) => !FoldedLinesManager.isFolded(range, editor));
       const foldedRanges: Range[] = ranges.filter((range) => FoldedLinesManager.isFolded(range, editor));
-      // console.log('folded ranges');
-      // console.log(foldedRanges);
-
-      /*
-      for (const range of unfoldedRanges){
-        const firstLineOfUnfoldedRange = new Range(range.start.line, 7, range.start.line, editor.document.lineAt(range.start).text.length);
-        const lastLineOfUnfoldedRange = new Range(range.end.line, 10, range.end.line, editor.document.lineAt(range.end).text.length);
-      }
-      */
-      // console.log(ranges);
-      //  console.log(unfoldedRanges);
-
 
       const inlineFoldedRanges = foldedRanges.map(rangeToInlineRange(editor.document));
-      // const inlineUnfoldedRangesFirstLine = unfoldedRanges.map(unfoldedRangeToInlineRangeFirstLine(editor.document));
-      // const inlineUnfoldedRangesLastLine = unfoldedRanges.map(unfoldedRangeToInlineRangeLastLine(editor.document));
-
-
       editor.setDecorations(decoration, inlineFoldedRanges);
-      //editor.setDecorations(unfoldedDecorationFirst, inlineUnfoldedRangesFirstLine);
-      //editor.setDecorations(unfoldedDecorationLast, inlineUnfoldedRangesLastLine);
-
     }
-
   }
 
   private getRegionDecorations(editor: TextEditor): DecorationsRecord {
