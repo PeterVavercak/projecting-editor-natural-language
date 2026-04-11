@@ -1395,7 +1395,8 @@ Your role is to receive text document content and divide it among logical sectio
 * You may create nested region which would be part of parent region and would describe part of the code (class could be root region, groups of methods could be nested regions, individual methods could more nested region and so on)
 * Primitive methods like getters and setters could be grouped together into region rather than individual regions
 * For each region you will remember first and last line of the code inside newly generated region
-* You will generate structured response a sequence of JSON structures {"firstLine": <first line of the code>, "lastLine": <last line of the code>}{...}.. for each region
+* For each region you will remember level of nesting (level 0 would be root region, level 1 would be nested region inside root region and so on)
+* You will generate structured response a sequence of JSON structures {"firstLine": <first line of the code>, "lastLine": <last line of the code>, "level": <level of region nesting>}{...}.. for each region
 * Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
 * Don't put JSON objects into Array. Objects in the response should be generated each right after another.
 
@@ -1426,9 +1427,9 @@ java
 20: }
 </written_text_document>
 <assistant_response id = "example1">
-{ "firstLine": 1, "lastLine": 20}
-{ "firstLine": 4, "lastLine": 6}
-{ "firstLine": 9, "lastLine": 18}
+{ "firstLine": 1, "lastLine": 20, "level": 0 }
+{ "firstLine": 4, "lastLine": 6, "level": 1 }
+{ "firstLine": 9, "lastLine": 18, "level": 1 }
 
 <written_text_document id = "example2">
 java
@@ -1541,15 +1542,15 @@ java
 106: }
 </written_text_document>
 <assistant_response id = "example2">
-{ "firstLine": 5, "lastLine": 106 }
-{ "firstLine": 11, "lastLine": 26 }
-{ "firstLine": 28, "lastLine": 30 }
-{ "firstLine": 32, "lastLine": 38 }
-{ "firstLine": 39, "lastLine": 47 }
-{ "firstLine": 49, "lastLine": 58 }
-{ "firstLine": 60, "lastLine": 65 }
-{ "firstLine": 67, "lastLine": 77 }
-{ "firstLine": 79, "lastLine": 105 }
+{ "firstLine": 5, "lastLine": 106, "level": 0 }
+{ "firstLine": 11, "lastLine": 26, "level": 1 }
+{ "firstLine": 28, "lastLine": 30, "level": 1 }
+{ "firstLine": 32, "lastLine": 38, "level": 1 }
+{ "firstLine": 39, "lastLine": 47, "level": 1 }
+{ "firstLine": 49, "lastLine": 58, "level": 1 }
+{ "firstLine": 60, "lastLine": 65, "level": 1 }
+{ "firstLine": 67, "lastLine": 77, "level": 1 }
+{ "firstLine": 79, "lastLine": 105, "level": 1 }
 </assistant_response>
 
 
@@ -1581,9 +1582,9 @@ python
 23:     return blocks
 </written_text_document>
 <assistant_response id = "example3">
-{ "firstLine" : 0, "lastLine": 6}
-{ "firstLine" : 8, "lastLine": 13}
-{ "firstLine" : 15, "lastLine": 23}
+{ "firstLine" : 0, "lastLine": 6, "level": 0 }
+{ "firstLine" : 8, "lastLine": 13 , "level": 0 }
+{ "firstLine" : 15, "lastLine": 23, "level": 0 }
 </assistant_response>
 
 

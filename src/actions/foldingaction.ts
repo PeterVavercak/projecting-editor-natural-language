@@ -21,10 +21,6 @@ export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: Better
             if (
                 couple.naturalLanguageFolding !== undefined
             ) {
-
-                // console.log('Natural language at line: ' + couple.naturalLanguageFolding.start + ' unfolded');
-                //  console.log(editor.document.uri);
-                //  console.log(couple);
                 markFoldStart();
                 await commands.executeCommand('editor.unfold', { selectionLines: [couple.naturalLanguageFolding.start] });
                 ManipulatedFoldManager.setFoldedLineStatus(editor, couple.naturalLanguageFolding.start, 'computer', 'unfolded');
@@ -33,8 +29,6 @@ export function showAllNaturalLanguageRegions(editor: TextEditor, ranges: Better
             if (
                 couple.codeFolding !== undefined
             ) {
-                //   console.log('Code at line: ' + couple.codeFolding.start + ' folded');
-
                 markFoldStart();
                 await commands.executeCommand('editor.fold', { selectionLines: [couple.codeFolding.start] });
                 ManipulatedFoldManager.setFoldedLineStatus(editor, couple.codeFolding.start, 'computer', 'folded');
@@ -273,7 +267,6 @@ function wasTranslationUpdated(provider: SnapshotProvider, document: TextDocumen
     }
     const snapshotContent = provider.getSnapshotContentFor(document.uri);
     const documentContent = document.getText();
-
 
     if (snapshotContent === undefined) {
         return true;

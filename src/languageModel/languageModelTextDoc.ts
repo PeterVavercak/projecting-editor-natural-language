@@ -131,34 +131,30 @@ async function divideDocument(
     document: TextDocument
 ) {
     const edit = new WorkspaceEdit();
-    let accumulatedResponse = '';
-    const regionTokes = getRegionTokens(document);
-    for await (const fragment of response.text) {
-        accumulatedResponse += fragment;
-
-        // if the fragment is a }, we can try to parse the whole line
-        if (fragment.includes('}')) {
-            try {
-                const annotation = JSON.parse(accumulatedResponse);
-                const indentation = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, annotation.firstLine);
-                edit.insert(
-                    document.uri,
-                    new Position(annotation.firstLine, 0),
-                    indentation + regionTokes.start + '\n'
-                );
-                edit.insert(
-                    document.uri,
-                    new Position(annotation.lastLine, document.lineAt(annotation.lastLine).text.length),
-                    '\n' + indentation + regionTokes.end
-                );
-            } catch (e) {
-                console.log(e);
-                // do nothing
-            }
-
-            accumulatedResponse = '';
+    const regionTokens = getRegionTokens(document);
+    const regions: { firstLine: number, lastLine: number, level: number }[] = [];
+  
+    for await (const obj of extractSequentialJsonObjects(response.text)) {
+         if (typeof obj !== 'object' || obj === null) {
+            continue;
         }
+        const regionObject = obj as { firstLine: number, lastLine: number, level: number };
+        regions.push(regionObject);
+    }
+    regions.sort((a, b) => b.level - a.level);
+    for(const region of regions){
+        const indentation = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, region.firstLine);
 
+        edit.insert(
+            document.uri,
+            new Position(region.firstLine, 0),
+            indentation + regionTokens.start + '\n'
+        );
+        edit.insert(
+            document.uri,
+            new Position(region.lastLine, document.lineAt(region.lastLine).text.length),
+            '\n' + indentation + regionTokens.end
+        );
     }
     await workspace.applyEdit(edit);
 
