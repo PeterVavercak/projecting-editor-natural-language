@@ -40,12 +40,12 @@ const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: ExtensionContext) {
 
-  
+
   const treeView = window.createTreeView('projectingEditorView', {
     treeDataProvider: toolsProvider,
     showCollapseAll: true
   });
-   context.subscriptions.push(treeView);
+  context.subscriptions.push(treeView);
 
   registerContentProvider(context, snapshotProvider);
   createSnapshots();
@@ -70,28 +70,28 @@ export function activate(context: ExtensionContext) {
 
     workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(CONFIG_ID)) {
-        restart();
         updateAllDocuments();
         createSnapshots();
       }
     }),
 
     window.onDidChangeVisibleTextEditors(() => {
+
       updateAllDocuments();
       registerProviders(context);
     }),
 
     workspace.onDidChangeTextDocument((e) => {
+
+
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
       if (e.contentChanges.length === 0) {
         return;
       }
       recentlyEditedDocs.set(e.document.uri, Date.now());
-      setTimeout(async () => {
-        FoldedLinesManager.updateAllFoldedLines();
-        await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
-      }, 100);
+      restart();
 
+      updateAllDocuments();
     }),
 
     window.onDidChangeTextEditorVisibleRanges(async (e) => {
@@ -105,12 +105,12 @@ export function activate(context: ExtensionContext) {
       //console.log('last folding action');
       //console.log(lastFoldingAction);
       //console.log(ManipulateFoldManager.wasLastActionFolding(e.textEditor));
-      
+
       if (ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
         const foldingRanges = await getRanges(e.textEditor.document, foldingProviders);
         await openComplementaryRegion(e.textEditor, foldingRanges, snapshotProvider);
       }
-     
+
       FoldedLinesManager.updateFoldedLines(e.textEditor);
       await ManipulateFoldManager.updateFoldedLines(e.textEditor, foldingProviders);
       setTimeout(async () => {

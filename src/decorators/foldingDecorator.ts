@@ -60,12 +60,11 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
   }
 
   private addToRegionDecorations(foldingRanges: BetterFoldingRange[], decorations: DecorationsRecord): DecorationsRecord {
-    const foldingRegionRanges = foldingRanges.filter(range => range.kind === FoldingRangeKind.Region);
     for (const foldingRange of foldingRanges) {
-      const firstLine = foldingRange.start.toString();
-      if (!(firstLine in decorations)) {
+      const name = foldingRange.collapsedText ?? foldingRange.foldingType ?? DEFAULT_COLLAPSED_TEXT ;
+      if (!(name in decorations)) {
         const newDecorationOptions = this.newDecorationOptions(foldingRange.collapsedText ?? capitalizeSafe(foldingRange.foldingType) ?? '');
-        decorations[firstLine] = window.createTextEditorDecorationType(newDecorationOptions);
+        decorations[name] = window.createTextEditorDecorationType(newDecorationOptions);
       }
     }
     return decorations;
@@ -74,7 +73,7 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
   private applyDecorations(editor: TextEditor, foldingRanges: BetterFoldingRange[], decorations: DecorationsRecord) {
     const collapsedTextToFoldingRanges = groupArrayToMap(
       foldingRanges,
-      (foldingRange) => foldingRange.start.toString(),
+      (foldingRange) => (foldingRange.collapsedText ?? foldingRange.foldingType ),
       DEFAULT_COLLAPSED_TEXT
     );
 

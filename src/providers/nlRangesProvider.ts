@@ -2,8 +2,8 @@ import { FoldingRangeKind, TextDocument } from "vscode";
 import { BetterFoldingRange } from "../types";
 import BetterFoldingRangeProvider from "./betterFoldingRangeProvider";
 
-const NL_REGION_REGEX = /^[ \t]*(?:\/\*)?#NaturalLanguage(?:\s+(.*))?\r?\n([\s\S]*?)^[ \t]*#EndNaturalLanguage(?:\*\/)?/gm;
-
+//const NL_REGION_REGEX = /^[ \t]*(?:\/\*)?#NaturalLanguage(?:\s+(.*))?\r?\n([\s\S]*?)^[ \t]*#EndNaturalLanguage(?:\*\/)?/gm;
+const NL_REGION_REGEX = /^[ \t]*(?:\/\*)?#NaturalLanguage(?:[ \t]+([^\r\n]*))?\r?\n([\s\S]*?)^[ \t]*#EndNaturalLanguage(?:\*\/)?/gm;
 
 export default class NLRangesProvider extends BetterFoldingRangeProvider {
 

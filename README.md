@@ -57,13 +57,19 @@ Global generation according to currently opened text Document
 
 Generates natural language for every code language region marked by #region/#endregion in currently opened text document by pressing button.
 
+![Global Generate Natural Language](/docResources/global-generate-natural-language.gif)
+
 ### Global generation of code language
 
 Generates code language for every natural language region marked by #NaturalLanguage/#EndNaturalLanguage in currently opened text document by pressing button.
 
+![Global Generate Code Language](/docResources/global-generate-code-language.gif)
+
 ### Generation of regions
 
 Clear Text Document of natural language regions and #region/#endregion markers divides code into logical segment marked by #region/#endregion.
+
+![Global Generate Regions](/docResources/global-generate-regions.gif)
 
 ## Decoration
 
