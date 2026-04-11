@@ -7,14 +7,27 @@
     "type": "git",
     "url": "https://github.com/PeterVavercak/projecting-editor-natural-language"
   },
-  "version": "0.7.0",
+  "version": "0.8.0",
   "engines": {
     "vscode": "^1.107.0"
   },
   "categories": [
-    "Programming Languages", "Snippets", "AI"
+    "Programming Languages",
+    "Snippets",
+    "AI"
   ],
-  "keywords": ["snippets", "llm", "ai", "projecting editor", "natural language", "collapse", "region", "folding", "show", "hide"],
+  "keywords": [
+    "snippets",
+    "llm",
+    "ai",
+    "projecting editor",
+    "natural language",
+    "collapse",
+    "region",
+    "folding",
+    "show",
+    "hide"
+  ],
   "activationEvents": [
     "onStartupFinished",
     "onView:myToolsView"
