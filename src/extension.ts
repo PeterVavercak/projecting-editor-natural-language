@@ -89,9 +89,11 @@ export function activate(context: ExtensionContext) {
         return;
       }
       recentlyEditedDocs.set(e.document.uri, Date.now());
-      restart();
 
-      updateAllDocuments();
+      setTimeout(async () => {
+        FoldedLinesManager.updateAllFoldedLines();
+        await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
+      }, 50);
     }),
 
     window.onDidChangeTextEditorVisibleRanges(async (e) => {
@@ -102,9 +104,6 @@ export function activate(context: ExtensionContext) {
       FoldedLinesManager.updateFoldedLines(e.textEditor);
       await ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, foldingProviders);
       const lastFoldingAction = ManipulateFoldManager.getLastManipulatedFolding(e.textEditor);
-      //console.log('last folding action');
-      //console.log(lastFoldingAction);
-      //console.log(ManipulateFoldManager.wasLastActionFolding(e.textEditor));
 
       if (ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
         const foldingRanges = await getRanges(e.textEditor.document, foldingProviders);

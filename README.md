@@ -77,8 +77,14 @@ Option to have folded region projecting by replacement text
 
 If no region name exists decoration for folded text is "Code"/"Natural Language".
 
+![Unnamed Decoration](/docResources/unnamed-decoration.gif)
+
 If region name exists decoration name is that name.
+
+![Named decoration](/docResources/named-decoration.gif)
 
 ## AutoCompletion
 
 Auto completion of code language region and natural language region.
+
+![Autocompletion](/docResources/autoompletion.gif)
