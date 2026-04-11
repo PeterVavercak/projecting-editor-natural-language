@@ -70,7 +70,9 @@ export function activate(context: ExtensionContext) {
 
     workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(CONFIG_ID)) {
+        restart();
         updateAllDocuments();
+
         createSnapshots();
       }
     }),
@@ -140,6 +142,16 @@ function registerProviders(context: ExtensionContext) {
     }
   }
 }
+
+/**
+ * Original Code Provided  Mohammad Baqer
+ * Source: https://github.com/mtbaqer/vscode-better-folding
+ * Licensed under the MIT License
+ * License: https://marketplace.visualstudio.com/items/MohammadBaqer.better-folding/license
+ * 
+ * Changes:
+ * changed according programs needs
+ */
 
 
 function registerContentProvider(context: ExtensionContext, provider: SnapshotProvider) {

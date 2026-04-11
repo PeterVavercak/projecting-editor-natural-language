@@ -94,3 +94,13 @@ class FoldedLinesManager {
 }
 
 export default FoldedLinesManager.instance;
+
+/**
+ * Original Code Provided Mohammad Baqer
+ * Source: https://github.com/mtbaqer/vscode-better-folding
+ * Licensed under the MIT License
+ * License: https://marketplace.visualstudio.com/items/MohammadBaqer.better-folding/license
+ * 
+ * Changes:
+ * added return value undefined for isFolded()
+ */

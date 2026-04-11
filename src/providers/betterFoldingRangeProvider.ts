@@ -23,4 +23,12 @@ export default abstract class BetterFoldingRangeProvider implements FoldingRange
   public restart() {
     this.documentToFoldingRanges.clear();
   }
+
 }
+
+/**
+ * This code is based on work by Mohammad Baqer
+ * Source: https://github.com/mtbaqer/vscode-better-folding
+ * Licensed under the MIT License
+ * License: https://marketplace.visualstudio.com/items/MohammadBaqer.better-folding/license
+ */
