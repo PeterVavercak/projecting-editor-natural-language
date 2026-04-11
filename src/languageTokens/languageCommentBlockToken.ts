@@ -13,7 +13,7 @@ export function getCommentBlockTokens(document: TextDocument): RegionTokens {
 
 export const NATURAL_LANGUAGE_BLOCK: Record<string, RegionTokens> = {
   python: {
-    start: 'NaturalLanguage',
+    start: '#NaturalLanguage',
     end: '#EndNaturalLanguage',
     lineComment: '#',
   },

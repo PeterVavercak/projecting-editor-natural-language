@@ -1,6 +1,6 @@
 {
   "Natural Language region": {
-    "prefix": ["/*nlregion", "nlregion", "NaturalLanguage","#NaturalLanguage"],
+    "prefix": ["NaturalLanguage","#NaturalLanguage"],
     "body": ["/*#NaturalLanguage", "$0", "#EndNaturalLanguage*/", ""]
   },
   "Code Region":{
