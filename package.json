@@ -1,7 +1,7 @@
 {
   "name": "projecting-editor-nl-code",
-  "displayName": "Projecting Editor Displaying Natural Language",
-  "description": "",
+  "displayName": "Projecting Editor using Language Model",
+  "description": "Projecting editor to display response from LLM into text editor. Translates code language into natural language and vice versa.",
   "publisher": "PeterVaverk",
   "repository": {
     "type": "git",
@@ -12,8 +12,9 @@
     "vscode": "^1.107.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages", "Snippets", "AI"
   ],
+  "keywords": ["snippets", "llm", "ai", "projecting editor", "natural language", "collapse", "region", "folding", "show", "hide"],
   "activationEvents": [
     "onStartupFinished",
     "onView:myToolsView"
