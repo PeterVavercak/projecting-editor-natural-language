@@ -92,19 +92,6 @@
             "claude-opus-4.6",
             "claude-sonnet-4.6"
           ],
-          "enumItemLabels": [
-            "Chat GPT 4o",
-            "Grok",
-            "Chat GPT 5",
-            "Chat GPT 5 mini",
-            "Chat GPT 5 nano",
-            "Chat GPT 4.1",
-            "Chat GPT 4.1 mini",
-            "Chat Gpt 4.1 nano",
-            "Gemini 2.5 Pro",
-            "Claude Opus 4.6",
-            "Claude Sonnet 4.6"
-          ],
           "default": "gpt-4o",
           "description": "Language Model"
         },
