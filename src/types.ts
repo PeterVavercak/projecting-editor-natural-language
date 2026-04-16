@@ -29,8 +29,6 @@ export interface BetterFoldingRange extends FoldingRange {
   startColumn?: number;
   kind?: FoldingRangeKind;
   collapsedText?: string;
-  id?: number | null;
-  content?: string;
   nestingLevel?: number;
   foldingType?: 'code' | 'natural language';
 }

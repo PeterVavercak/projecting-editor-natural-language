@@ -10,14 +10,12 @@ import { actionMutex } from './utils/classes/managers/actionMutex';
 export function registerSnapshotCommands(foldingProviders: ProvidersList, snapshotProvider: SnapshotProvider): Disposable[] {
 
   const writeNL = commands.registerCommand("ProjectingNLEditor.writeNL", async () => {
-    await actionMutex.runExclusive('Generating Explanations', async (progress) => {
+    await actionMutex.runExclusive('Generating Explanations', async () => {
       for (const editor of window.visibleTextEditors) {
         if (editor.document.uri.scheme !== 'file') {
           continue;
         }
-        console.log(editor.document.uri);
         await generateStructuredOutputResponse(editor.document, 'genNL');
-        console.log('explanations generated');
         snapshotProvider.saveFromDocument(editor.document);
         const ranges = await getRanges(editor.document, foldingProviders);
         showAllNaturalLanguageRegions(editor, ranges);
@@ -26,7 +24,7 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
   });
 
   const writeCode = commands.registerCommand("ProjectingNLEditor.writeCode", async () => {
-    await actionMutex.runExclusive('Generating codes', async (progress) => {
+    await actionMutex.runExclusive('Generating codes', async () => {
       for (const editor of window.visibleTextEditors) {
         if (editor.document.uri.scheme !== 'file') {
           continue;
@@ -40,14 +38,12 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
   });
 
   const divideRegions = commands.registerCommand("ProjectingNLEditor.generateRegions", async () => {
-    await actionMutex.runExclusive('Generating regions', async (progress) => {
+    await actionMutex.runExclusive('Generating regions', async () => {
       for (const editor of window.visibleTextEditors) {
         if (editor.document.uri.scheme !== 'file') {
           continue;
         }
-        console.log('generating regions');
         const ranges = await getRanges(editor.document, foldingProviders);
-        snapshotProvider.saveFromDocument(editor.document);
         openEveryRegion(editor, ranges);
         await clearDocument(editor.document, ranges);
         setTimeout(async () => {

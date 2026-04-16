@@ -5,7 +5,6 @@ import { BetterFoldingRange, LanguageTranslation } from '../types';
 import { getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
 import { getRegionTokens } from '../languageTokens/languageRegionTokens';
 import { getCommentBlockTokens } from '../languageTokens/languageCommentBlockToken';
-import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldManager";
 
 
 const languageModel = config.getConfiguredLanguageModel();
@@ -46,7 +45,6 @@ export async function generateLanguageResponse(
                 await rewriteDocWithLanguageResponse(document, chatResponse, translation.naturalLanguageFolding, translation.codeFolding, useCase);
                 break;
         }
-
     }
 }
 
@@ -130,7 +128,6 @@ async function addNewCodeIntoDoc(
     const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, naturalLanguageRange.start);
     accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
 
-
     const edit = new WorkspaceEdit();
 
     edit.insert(
@@ -148,9 +145,7 @@ async function addNewCodeIntoDoc(
         document.uri,
         new Range(naturalLanguageRange.end, document.lineAt(naturalLanguageRange.end).text.length, naturalLanguageRange.end + 1, 0)
     );
-
     await workspace.applyEdit(edit);
-    
 }
 
 

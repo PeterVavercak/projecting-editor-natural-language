@@ -1,7 +1,7 @@
 import * as config from "../configuration";
 import { TextDocument, TextEditor, TextEditorRevealType, commands } from "vscode";
 import { generateLanguageResponse } from "../languageModel/languageModelSegments";
-import ManipulatedFoldManager from "../utils/classes/managers/manipulateFoldManager";
+import ManipulatedFoldManager from "../utils/classes/managers/foldManipulationManager";
 import { BetterFoldingRange, NaturalLanguageRegionCouple, LanguageTranslation, LastFoldedLine } from "../types";
 import { forEachForestLevel, pairByRelation } from "../utils/classes/functions/utils";
 import { SnapshotProvider } from "../providers/snapshotProvider";
@@ -132,7 +132,6 @@ export async function openComplementaryRegion(editor: TextEditor, foldingRanges:
         return;
     }
 
-
     const foldMap = createFoldTranslationsMap(foldingRanges);
     const foundTranslation = foldMap.get(lastFolding.foldingLine);
     if (foundTranslation === undefined) {
@@ -149,7 +148,7 @@ export async function openComplementaryRegion(editor: TextEditor, foldingRanges:
         return;
     }
     if (wasTranslationUpdated(contentProvider, editor.document, foundTranslation)) {
-        await actionMutex.runExclusive('Generating complementary region', async (progress) => {
+        await actionMutex.runExclusive('Generating complementary region', async () => {
             await generateTranslationRegion(editor, foundTranslation, chosenRegion, lastFolding);
         });
     }
@@ -215,7 +214,6 @@ async function generateTranslationRegion(editor: TextEditor, translation: Langua
     const closingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasFolded';
     const openingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasUnfolded';
     const openingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasUnfolded';
-    console.log(translation);
     if (closingCodeRegion || openingLanguageRegion) {
         if (translation.naturalLanguageFolding === undefined) {
             await generateLanguageResponse(editor.document, translation, 'genNL');
@@ -233,10 +231,7 @@ async function generateTranslationRegion(editor: TextEditor, translation: Langua
 }
 
 async function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: LastFoldedLine, complementaryRegion: BetterFoldingRange | undefined) {
-    if (!config.getAutomaticFolding()) {
-        return;
-    }
-    if (complementaryRegion === undefined) {
+    if (!config.getAutomaticFolding() || complementaryRegion === undefined) {
         return;
     }
 
@@ -249,7 +244,7 @@ async function foldUnfoldComplementaryRegion(editor: TextEditor, lastFolding: La
         markFoldEnd();
         editor.revealRange(visibleRange, TextEditorRevealType.AtTop);
 
-    } else if (lastFolding.lastFoldingAction === 'wasUnfolded') {
+    } else {
         markFoldStart();
         const visibleRange = editor.visibleRanges[0];
 

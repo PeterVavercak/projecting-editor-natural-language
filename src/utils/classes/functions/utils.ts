@@ -175,11 +175,13 @@ export function pairByRelation<T, U>(
   return result;
 }
 
+/*
 export function getAllIds(
   foldingRanges: BetterFoldingRange[]
 ): number[] {
   return foldingRanges.map(o => o.id).filter(i => typeof i === 'number');
 }
+*/
 
 
 export function foldingRangeToRange(document: TextDocument): (foldingRange: BetterFoldingRange) => Range {

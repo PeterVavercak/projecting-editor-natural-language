@@ -9,7 +9,7 @@ import * as config from "./configuration";
 import RegionRangesProvider from "./providers/regionRangesProvider";
 
 import FoldedLinesManager from "./utils/classes/managers/foldedLinesManager";
-import ManipulateFoldManager from "./utils/classes/managers/manipulateFoldManager";
+import FoldManipulation from "./utils/classes/managers/foldManipulationManager";
 
 import { ProvidersList } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
@@ -94,7 +94,7 @@ export function activate(context: ExtensionContext) {
 
       setTimeout(async () => {
         FoldedLinesManager.updateAllFoldedLines();
-        await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
+        await FoldManipulation.updateAllFoldedLines(foldingProviders);
       }, 50);
     }),
 
@@ -104,16 +104,15 @@ export function activate(context: ExtensionContext) {
         return;
       }
       FoldedLinesManager.updateFoldedLines(e.textEditor);
-      await ManipulateFoldManager.updateFoldedLinesAndLastManipulatedLine(e.textEditor, foldingProviders);
-      const lastFoldingAction = ManipulateFoldManager.getLastManipulatedFolding(e.textEditor);
+      await FoldManipulation.updateFoldedLinesAndLastManipulatedLine(e.textEditor, foldingProviders);
 
-      if (ManipulateFoldManager.wasLastActionFolding(e.textEditor)) {
+      if (FoldManipulation.wasLastActionFolding(e.textEditor)) {
         const foldingRanges = await getRanges(e.textEditor.document, foldingProviders);
         await openComplementaryRegion(e.textEditor, foldingRanges, snapshotProvider);
       }
 
       FoldedLinesManager.updateFoldedLines(e.textEditor);
-      await ManipulateFoldManager.updateFoldedLines(e.textEditor, foldingProviders);
+      await FoldManipulation.updateFoldedLines(e.textEditor, foldingProviders);
       setTimeout(async () => {
         foldingDecorator.triggerUpdateDecorations();
       }, 50);
@@ -178,7 +177,7 @@ function updateAllDocuments() {
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
     }
     FoldedLinesManager.updateAllFoldedLines();
-    await ManipulateFoldManager.updateAllFoldedLines(foldingProviders);
+    await FoldManipulation.updateAllFoldedLines(foldingProviders);
     foldingDecorator.triggerUpdateDecorations();
   }, 500);
 }
