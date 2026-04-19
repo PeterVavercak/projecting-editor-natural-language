@@ -43,14 +43,14 @@ export class ToolsProvider implements TreeDataProvider<ToolNode> {
         [
           new ToolNode(
             'action.ShowNL',
-            'Show all natural language',
+            'Show All Natural Language',
             'action',
             [],
             CREATE_PROJECT_NL_COMMAND
           ),
           new ToolNode(
             'action.showCodes',
-            'Show all source code',
+            'Show All Source Code',
             'action',
             [],
             CREATE_PROJECT_CODE_COMMAND
