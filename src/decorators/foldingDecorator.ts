@@ -61,7 +61,7 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
     for (const foldingRange of foldingRanges) {
       const name = foldingRange.collapsedText ?? foldingRange.foldingType ?? DEFAULT_COLLAPSED_TEXT ;
       if (!(name in decorations)) {
-        const newDecorationOptions = this.newDecorationOptions(foldingRange.collapsedText ?? capitalizeSafe(foldingRange.foldingType) ?? '');
+        const newDecorationOptions = this.newDecorationOptions(foldingRange.collapsedText ?? foldingRange.foldingType ?? '');
         decorations[name] = window.createTextEditorDecorationType(newDecorationOptions);
       }
     }

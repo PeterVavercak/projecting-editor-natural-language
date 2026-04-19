@@ -68,7 +68,7 @@ export async function clearDocument(document: TextDocument, ranges: BetterFoldin
     } 
   }
   for (const range of ranges) {
-    if (range.foldingType === 'natural language') {
+    if (range.foldingType === 'Natural Language') {
       if (range.end <= document.lineCount) {
         edit.delete(document.uri, new Range(range.start, 0, range.end + 1, 0));
       } else {

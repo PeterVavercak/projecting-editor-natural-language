@@ -137,7 +137,7 @@ export async function openComplementaryRegion(editor: TextEditor, foldingRanges:
     if (foundTranslation === undefined) {
         return;
     }
-    const [foundComplementaryRegion, chosenRegion] = foundTranslation?.hasFolded === 'code' ? [
+    const [foundComplementaryRegion, chosenRegion] = foundTranslation?.hasFolded === 'Source Code' ? [
         foundTranslation.naturalLanguageFolding,
         foundTranslation.codeFolding
     ] : [
@@ -207,14 +207,14 @@ function isChild(
 }
 
 async function generateTranslationRegion(editor: TextEditor, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
-    
+
     if (!config.getAutomaticTranslation()) {
         return;
     }
-    const closingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasFolded';
-    const closingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasFolded';
-    const openingCodeRegion = chosenRegion.foldingType === 'code' && lastFolding.lastFoldingAction === 'wasUnfolded';
-    const openingLanguageRegion = chosenRegion.foldingType === 'natural language' && lastFolding.lastFoldingAction === 'wasUnfolded';
+    const closingCodeRegion = chosenRegion.foldingType === 'Source Code' && lastFolding.lastFoldingAction === 'wasFolded';
+    const closingLanguageRegion = chosenRegion.foldingType === 'Natural Language' && lastFolding.lastFoldingAction === 'wasFolded';
+    const openingCodeRegion = chosenRegion.foldingType === 'Source Code' && lastFolding.lastFoldingAction === 'wasUnfolded';
+    const openingLanguageRegion = chosenRegion.foldingType === 'Natural Language' && lastFolding.lastFoldingAction === 'wasUnfolded';
     if (closingCodeRegion || openingLanguageRegion) {
         if (translation.naturalLanguageFolding === undefined) {
             await generateLanguageResponse(editor.document, translation, 'genNL');
@@ -279,8 +279,8 @@ function wasTranslationUpdated(provider: SnapshotProvider, document: TextDocumen
 }
 
 function findCouples(foldingRanges: BetterFoldingRange[]): NaturalLanguageRegionCouple[] {
-    const codeRanges = foldingRanges.filter(range => range.foldingType === 'code');
-    const naturalLanguageRanges = foldingRanges.filter(range => range.foldingType === 'natural language');
+    const codeRanges = foldingRanges.filter(range => range.foldingType === 'Source Code');
+    const naturalLanguageRanges = foldingRanges.filter(range => range.foldingType === 'Natural Language');
     const relations = pairByRelation(naturalLanguageRanges, codeRanges, (nlRange, codeRange) => nlRange.end + 1 === codeRange.start);
     const couples: NaturalLanguageRegionCouple[] = [];
     for (const relation of relations) {
@@ -301,7 +301,7 @@ function createFoldTranslationsMap(foldingRanges: BetterFoldingRange[]): Map<num
         if (relation.naturalLanguageFolding !== undefined) {
             foldMap.set(
                 relation.naturalLanguageFolding.start, {
-                hasFolded: 'natural language',
+                hasFolded: 'Natural Language',
                 naturalLanguageFolding: relation.naturalLanguageFolding,
                 codeFolding: relation.codeFolding
             }
@@ -310,7 +310,7 @@ function createFoldTranslationsMap(foldingRanges: BetterFoldingRange[]): Map<num
         if (relation.codeFolding !== undefined) {
             foldMap.set(
                 relation.codeFolding.start, {
-                hasFolded: 'code',
+                hasFolded: 'Source Code',
                 naturalLanguageFolding: relation.naturalLanguageFolding,
                 codeFolding: relation.codeFolding
             }

@@ -23,7 +23,7 @@ export default class NLRangesProvider extends BetterFoldingRangeProvider {
           end: endPosition.line,
           kind: FoldingRangeKind.Comment,
           startColumn: document.lineAt(startPosition.line).firstNonWhitespaceCharacterIndex,
-          foldingType: 'natural language',
+          foldingType:  'Natural Language',
           collapsedText: match[1]?.trim() || undefined
         });
       }

@@ -20,7 +20,7 @@ export interface LineRegionNode {
   endLine?: number;
   children: LineRegionNode[];
   parent?: LineRegionNode;
-  nestingLevel? : number;
+  nestingLevel?: number;
 }
 
 export interface BetterFoldingRange extends FoldingRange {
@@ -30,7 +30,7 @@ export interface BetterFoldingRange extends FoldingRange {
   kind?: FoldingRangeKind;
   collapsedText?: string;
   nestingLevel?: number;
-  foldingType?: 'code' | 'natural language';
+  foldingType?: 'Source Code' | 'Natural Language';
 }
 
 export interface RegionTokens {
@@ -42,7 +42,7 @@ export interface RegionTokens {
 
 
 export interface LanguageTranslation {
-  hasFolded: 'code' | 'natural language';
+  hasFolded: 'Source Code' | 'Natural Language';
   codeFolding?: BetterFoldingRange;
   naturalLanguageFolding?: BetterFoldingRange;
 }
@@ -55,7 +55,7 @@ export interface NaturalLanguageRegionCouple {
   naturalLanguageFolding?: BetterFoldingRange;
 }
 
-export interface  FoldingRangeAction {
+export interface FoldingRangeAction {
   wasFoldedBy: 'user' | 'computer';
   foldingStatus: 'folded' | 'unfolded';
 };

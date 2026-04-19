@@ -26,7 +26,7 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
               end: node.endLine,
               kind: FoldingRangeKind.Region,
               startColumn: document.lineAt(node.startLine).firstNonWhitespaceCharacterIndex,
-              foldingType: 'code',
+              foldingType: 'Source Code',
               nestingLevel: node.nestingLevel,
               collapsedText: node.name
             }
