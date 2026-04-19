@@ -37,15 +37,13 @@
     "commands": [
       {
         "command": "Generation.generateNL",
-        "title": "Write Natural Language",
-        "category": "Generation",
-        "icon": "$(call-incoming)"
+        "title": "Generate Natural Language",
+        "category": "Generation"
       },
       {
         "command": "Generation.generateCode",
-        "title": "Write Code",
-        "category": "Generation",
-        "icon": "$(call-outgoing)"
+        "title": "Generate Source Code",
+        "category": "Generation"
       },
       {
         "command": "Generation.generateRegions",
@@ -114,12 +112,6 @@
           "type": "boolean",
           "default": false,
           "description": "Show Decorations"
-        },
-        "projectingNaturalLanguage.excludedLanguages": {
-          "order": 7,
-          "type": "array",
-          "default": [],
-          "markdownDescription": "List of languages to exclude from folding. \n\nExample: `['javascript', 'typescript']`."
         }
       }
     },
