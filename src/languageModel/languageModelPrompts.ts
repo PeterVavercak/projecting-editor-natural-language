@@ -295,6 +295,7 @@ You are generator which would receive content of text document and you will gene
 * Response should be stream of valid JSON schemas, which could accepted into JSON.parse()
 * Don't put JSON objects into Array. Objects in the response should be generated each right after another.
 * On every special character (/newline, backlash...) do escaping
+
 #Examples
 
 <written_text_document id = "example1">
@@ -502,9 +503,9 @@ You are translator. Your role is to translate given code into text in natural la
 * Do not go into much details about semantics of the code
 * Do the input section with bullet points containing information about important input variables
 * Do the output section with bullet points containing information about output of the code
-* If code is very primitive enough, do not include bullet points
+* If code is primitive enough, do not include bullet points.
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
-* In case of language python each line in generated text should have "# " as prefix (should be commented)
+* In case of language python each line in generated text should have "# " as prefix (should be commented). Do it only if language is python. If it is any other language leave as it is.
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
 * Return Natural Language response as plain text without quotation around it
 
@@ -664,7 +665,7 @@ You are updating translator. Your role is to update text in natural language acc
 * If code is very primitive enough, do not include bullet points
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
-* In case of language python each line in generated text should have "# " as prefix (should be commented)
+* In case of language python each line in generated text should have "# " as prefix (should be commented). Do it only if language is python. If it is any other language leave as it is.
 * Return Natural Language response as plain text without quotation around it
 * If Natural Language segment fits the code perfectly, return empty string. Don't put any explanation about natural language text already describing the code, just return the empty string.
 

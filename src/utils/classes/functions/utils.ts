@@ -112,11 +112,8 @@ export async function getRanges(document: TextDocument, providerList: ProvidersL
     providers[selector].push(provider);
   }
 
-  const excludedLanguages = config.excludedLanguages();
 
-  if (excludedLanguages.includes(document.languageId)) {
-    return [];
-  }
+ 
   const ranges: BetterFoldingRange[] = [];
   const languageProviders = providers[document.languageId] ?? [];
   const universalProviders = providers["*"] ?? [];

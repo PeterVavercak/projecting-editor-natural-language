@@ -23,7 +23,7 @@ Generation for individual region
 
 Generates new natural language region from code language region when code language region is closed.
 
-![Generating Natural Language Region](/docResources/natural-languge-generation.gif)
+![Generating Natural Language Region](/docResources/natural-language-generation.gif)
 
 ### Code Language Generation
 

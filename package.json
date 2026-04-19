@@ -36,41 +36,47 @@
   "contributes": {
     "commands": [
       {
-        "command": "ProjectingNLEditor.writeNL",
+        "command": "Generation.generateNL",
         "title": "Write Natural Language",
-        "category": "Projecting Natural Language Editor",
+        "category": "Generation",
         "icon": "$(call-incoming)"
       },
       {
-        "command": "ProjectingNLEditor.writeCode",
+        "command": "Generation.generateCode",
         "title": "Write Code",
-        "category": "Projecting Natural Language Editor",
+        "category": "Generation",
         "icon": "$(call-outgoing)"
       },
       {
-        "command": "ProjectingNLEditor.generateRegions",
-        "category": "Projecting Natural Language Editor",
+        "command": "Generation.generateRegions",
+        "category": "Generation",
         "title": "Generate Regions"
       },
       {
-        "command": "ProjectingNLEditor.showNLRegions",
-        "category": "Projecting Natural Language Editor",
+        "command": "Projection.showNLRegions",
+        "category": "Projection",
         "title": "Show Natural Language Regions"
       },
       {
-        "command": "ProjectingNLEditor.showCodeRegions",
-        "category": "Projecting Natural Language Editor",
+        "command": "Projection.showCodeRegions",
+        "category": "Projection",
         "title": "Show Code Regions"
       },
       {
-        "command": "ProjectingNLEditor.showEveryRegion",
-        "category": "Projecting Natural Language Editor",
+        "command": "Projection.showEveryRegion",
+        "category": "Projection",
         "title": "Show Every Regions"
       },
       {
-        "command": "ProjectingNLEditor.closeEveryRegion",
-        "category": "Projecting Natural Language Editor",
+        "command": "Projection.closeEveryRegion",
+        "category": "Projection",
         "title": "Close Every Regions"
+      },
+      {
+        "command": "Projection.restartDecorations",
+        "category": "Projection",
+        "title": "Reset Decoration"
+
       }
     ],
     "configuration": {

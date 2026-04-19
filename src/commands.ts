@@ -1,15 +1,16 @@
 // src/commands.ts
-import { Disposable, window, commands, ProgressLocation } from "vscode";
+import { Disposable, window, commands } from "vscode";
 import { generateStructuredOutputResponse } from "./languageModel/languageModelTextDoc";
 import { clearDocument, getRanges } from "./utils/classes/functions/utils";
 import { ProvidersList } from "./types";
 import { closeEveryRegion, openEveryRegion, showAllCodeRegions, showAllNaturalLanguageRegions } from "./actions/foldingAction";
 import { SnapshotProvider } from "./providers/snapshotProvider";
 import { actionMutex } from './utils/classes/managers/actionMutex';
+import { CREATE_GEN_CODE_COMMAND, CREATE_GEN_NL_COMMAND, CREATE_GEN_REGIONS_COMMAND, CREATE_PROJECT_ALL_COMMAND, CREATE_PROJECT_CODE_COMMAND, CREATE_PROJECT_NL_COMMAND, CREATE_PROJECT_NONE_COMMAND } from "./constants";
 
 export function registerSnapshotCommands(foldingProviders: ProvidersList, snapshotProvider: SnapshotProvider): Disposable[] {
 
-  const writeNL = commands.registerCommand("ProjectingNLEditor.writeNL", async () => {
+  const writeNL = commands.registerCommand(CREATE_GEN_NL_COMMAND, async () => {
     await actionMutex.runExclusive('Generating Explanations', async () => {
       for (const editor of window.visibleTextEditors) {
         if (editor.document.uri.scheme !== 'file') {
@@ -23,7 +24,7 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
     });
   });
 
-  const writeCode = commands.registerCommand("ProjectingNLEditor.writeCode", async () => {
+  const writeCode = commands.registerCommand(CREATE_GEN_CODE_COMMAND, async () => {
     await actionMutex.runExclusive('Generating codes', async () => {
       for (const editor of window.visibleTextEditors) {
         if (editor.document.uri.scheme !== 'file') {
@@ -37,7 +38,7 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
     });
   });
 
-  const divideRegions = commands.registerCommand("ProjectingNLEditor.generateRegions", async () => {
+  const divideRegions = commands.registerCommand(CREATE_GEN_REGIONS_COMMAND, async () => {
     await actionMutex.runExclusive('Generating regions', async () => {
       for (const editor of window.visibleTextEditors) {
         if (editor.document.uri.scheme !== 'file') {
@@ -46,15 +47,13 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
         const ranges = await getRanges(editor.document, foldingProviders);
         openEveryRegion(editor, ranges);
         await clearDocument(editor.document, ranges);
-        setTimeout(async () => {
-          snapshotProvider.saveFromDocument(editor.document);
-          await generateStructuredOutputResponse(editor.document, 'genRegion');
-        }, 50);
+        snapshotProvider.saveFromDocument(editor.document);
+        await generateStructuredOutputResponse(editor.document, 'genRegion');
       }
     });
   });
 
-  const showNLRegions = commands.registerCommand('ProjectingNLEditor.showNLRegions', async () => {
+  const showNLRegions = commands.registerCommand(CREATE_PROJECT_NL_COMMAND, async () => {
     for (const editor of window.visibleTextEditors) {
       if (editor.document.uri.scheme !== 'file') {
         continue;
@@ -64,7 +63,7 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
     }
   });
 
-  const showCodeRegions = commands.registerCommand('ProjectingNLEditor.showCodeRegions', async () => {
+  const showCodeRegions = commands.registerCommand(CREATE_PROJECT_CODE_COMMAND, async () => {
     for (const editor of window.visibleTextEditors) {
       if (editor.document.uri.scheme !== 'file') {
         continue;
@@ -74,7 +73,7 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
     }
   });
 
-  const showAllRegions = commands.registerCommand("ProjectingNLEditor.showEveryRegion", async () => {
+  const showAllRegions = commands.registerCommand(CREATE_PROJECT_ALL_COMMAND, async () => {
     for (const editor of window.visibleTextEditors) {
       if (editor.document.uri.scheme !== 'file') {
         continue;
@@ -84,7 +83,7 @@ export function registerSnapshotCommands(foldingProviders: ProvidersList, snapsh
     }
   });
 
-  const hideAllRegions = commands.registerCommand("ProjectingNLEditor.closeEveryRegion", async () => {
+  const hideAllRegions = commands.registerCommand(CREATE_PROJECT_NONE_COMMAND, async () => {
     for (const editor of window.visibleTextEditors) {
       if (editor.document.uri.scheme !== 'file') {
         continue;

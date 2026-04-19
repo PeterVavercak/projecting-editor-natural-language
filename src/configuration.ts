@@ -14,11 +14,7 @@ export function getAutomaticFolding() {
 }
 
 export function showDecorations() {
-;  return workspace.getConfiguration( CONFIG_ID ).get<boolean>("showDecorations") ?? false;
-}
-
-export function excludedLanguages() {
-  return workspace.getConfiguration(CONFIG_ID).get<string[]>("excludedLanguages") ?? [];
+  return workspace.getConfiguration( CONFIG_ID ).get<boolean>("showDecorations") ?? false;
 }
 
 

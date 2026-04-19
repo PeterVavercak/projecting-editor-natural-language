@@ -2,10 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import { registerSnapshotCommands } from "./commands";
 
-import { ExtensionContext, languages, window, workspace, Uri } from "vscode";
-import { CONFIG_ID } from "./constants";
+import { ExtensionContext, languages, window, workspace, Uri, commands } from "vscode";
+import { CONFIG_ID, CREATE_RESET_PROJECT } from "./constants";
 import FoldingDecorator from "./decorators/foldingDecorator";
-import * as config from "./configuration";
 import RegionRangesProvider from "./providers/regionRangesProvider";
 
 import FoldedLinesManager from "./utils/classes/managers/foldedLinesManager";
@@ -13,7 +12,6 @@ import FoldManipulation from "./utils/classes/managers/foldManipulationManager";
 
 import { ProvidersList } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
-//import RegionCodeLensProvider from './providers/regionCodeLensProvider';
 
 import ExtendedMap from './utils/classes/extendedMap';
 import { openComplementaryRegion } from './actions/foldingAction';
@@ -22,7 +20,6 @@ import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/snapshotProvider'
 import NLRangesProvider from './providers/nlRangesProvider';
 import { ToolsProvider } from "./providers/toolsProvider";
 
-//const bracketRangesProvider = new BracketRangesProvider();
 
 const foldingProviders: ProvidersList = [
   ["*", new RegionRangesProvider()],
@@ -117,20 +114,27 @@ export function activate(context: ExtensionContext) {
         foldingDecorator.triggerUpdateDecorations();
       }, 50);
     }),
+    
+      commands.registerCommand(CREATE_RESET_PROJECT, async () => {
+        restart();
+        updateAllDocuments();
+      })
+        
   );
   registerProviders(context);
   updateAllDocuments();
+  
+  
   registerSnapshotCommands(foldingProviders, snapshotProvider);
 }
 
 function registerProviders(context: ExtensionContext) {
 
-  const excludedLanguages = config.excludedLanguages();
 
   for (const editor of window.visibleTextEditors) {
     const languageId = editor.document.languageId;
 
-    if (!registeredLanguages.has(languageId) && !excludedLanguages.includes(languageId)) {
+    if (!registeredLanguages.has(languageId)) {
       registeredLanguages.add(languageId);
 
       for (const [selector, provider] of foldingProviders) {

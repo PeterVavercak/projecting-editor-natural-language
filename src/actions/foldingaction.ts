@@ -207,6 +207,7 @@ function isChild(
 }
 
 async function generateTranslationRegion(editor: TextEditor, translation: LanguageTranslation, chosenRegion: BetterFoldingRange, lastFolding: LastFoldedLine) {
+    
     if (!config.getAutomaticTranslation()) {
         return;
     }

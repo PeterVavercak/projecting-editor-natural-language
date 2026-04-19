@@ -43,8 +43,6 @@ export default class FoldingDecorator extends BetterFoldingDecorator {
   }
 
   public async getRanges(document: TextDocument): Promise<BetterFoldingRange[]> {
-    const excludedLanguages = config.excludedLanguages();
-    if (excludedLanguages.includes(document.languageId)) return [];
 
     const ranges: BetterFoldingRange[] = [];
 

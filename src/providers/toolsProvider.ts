@@ -1,5 +1,6 @@
 import { TreeDataProvider, TreeItem } from "vscode";
 import { ToolNode } from "./toolNode";
+import { CREATE_GEN_CODE_COMMAND, CREATE_GEN_NL_COMMAND, CREATE_GEN_REGIONS_COMMAND, CREATE_PROJECT_ALL_COMMAND, CREATE_PROJECT_CODE_COMMAND, CREATE_PROJECT_NL_COMMAND } from "../constants";
 
 export class ToolsProvider implements TreeDataProvider<ToolNode> {
   private readonly roots: ToolNode[];
@@ -13,24 +14,24 @@ export class ToolsProvider implements TreeDataProvider<ToolNode> {
         [
           new ToolNode(
             'action.generateExplanations',
-            'Generate Explanations',
+            'Generate Natural Language',
             'action',
             [],
-            'ProjectingNLEditor.writeNL'
+            CREATE_GEN_NL_COMMAND
           ),
           new ToolNode(
             'action.generateCodes',
-            'Generate Code',
+            'Generate Source Code',
             'action',
             [],
-            'ProjectingNLEditor.writeCode'
+            CREATE_GEN_CODE_COMMAND
           ),
           new ToolNode(
             'action.generateRegions',
             'Generate Regions',
             'action',
             [],
-            'ProjectingNLEditor.generateRegions'
+            CREATE_GEN_REGIONS_COMMAND
           )
         ]
       ),
@@ -42,17 +43,17 @@ export class ToolsProvider implements TreeDataProvider<ToolNode> {
         [
           new ToolNode(
             'action.ShowNL',
-            'Show all explanations',
+            'Show all natural language',
             'action',
             [],
-            'ProjectingNLEditor.showNLRegions'
+            CREATE_PROJECT_NL_COMMAND
           ),
           new ToolNode(
             'action.showCodes',
-            'Show codes',
+            'Show all source code',
             'action',
             [],
-            'ProjectingNLEditor.showCodeRegions'
+            CREATE_PROJECT_CODE_COMMAND
           )
         ]
       ),
