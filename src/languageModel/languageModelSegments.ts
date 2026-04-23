@@ -1,4 +1,4 @@
-import { workspace, WorkspaceEdit, LanguageModelChatMessage, LanguageModelChatResponse, lm, TextDocument, CancellationTokenSource, Range, Position, TextEditor, commands, TextEditorRevealType } from 'vscode';
+import { LanguageModelAccessInformation, workspace, window, WorkspaceEdit, LanguageModelChatMessage, LanguageModelChatResponse, lm, TextDocument, CancellationTokenSource, Range, Position, TextEditor, commands, TextEditorRevealType, LanguageModelError, LanguageModelChatMessageRole } from 'vscode';
 import { GENERATE_CODE, GENERATE_NATURAL_LANGUAGE, UPDATE_CODE, UPDATE_NATURAL_LANGUAGE } from './languageModelPrompts';
 import * as config from "../configuration";
 import { BetterFoldingRange, LanguageTranslation } from '../types';
@@ -18,18 +18,22 @@ export async function generateLanguageResponse(
     if (languageModelInstruction === undefined || languageModelPrompt === undefined) {
         return;
     }
-
-    let [model] = await lm.selectChatModels({
-        vendor: 'copilot',
-        family: languageModel
-    });
-    const messages = [
-        LanguageModelChatMessage.User(languageModelInstruction),
-        LanguageModelChatMessage.User(document.languageId),
-        LanguageModelChatMessage.User(languageModelPrompt)
-    ];
-    if (model) {
-        let chatResponse = await model.sendRequest(
+    console.log('hello');
+    try {
+        let [model] = await lm.selectChatModels({
+            vendor: 'copilot',
+            family: languageModel
+        });
+        const messages = [
+            LanguageModelChatMessage.User(languageModelInstruction),
+            LanguageModelChatMessage.User(document.languageId),
+            LanguageModelChatMessage.User(languageModelPrompt)
+        ];
+        if (!model) {
+            window.showErrorMessage('Language model wasn`t found.');
+            return;
+        }
+        const chatResponse = await model.sendRequest(
             messages,
             {},
             new CancellationTokenSource().token
@@ -45,7 +49,30 @@ export async function generateLanguageResponse(
                 await rewriteDocWithLanguageResponse(document, chatResponse, translation.naturalLanguageFolding, translation.codeFolding, useCase);
                 break;
         }
+    } catch (err) {
+        if (err instanceof LanguageModelError) {
+            if (err.code === 'Blocked') {
+                window.showErrorMessage(
+                    `No access for language model:\n${String(err)}`
+                );
+                return;
+            }
+            if (err.code === 'NoPermissions') {
+                window.showErrorMessage(
+                    `No permission for language model:\n + ${String(err)}`
+                );
+                return;
+            }
+            if (err.code === 'NotFound') {
+                window.showErrorMessage(
+                    `Requested language model not available or does not exist:\n + ${String(err)}`
+                );
+                return;
+            }
+        }
+        window.showErrorMessage(`Unexpected error: ${String(err)}`);
     }
+
 }
 
 function getLanguagePrompt(

@@ -4,6 +4,7 @@ import { RegionTokens } from "../types";
 const DEFAULT_COMMENT_BLOCK_CONFIG: RegionTokens = {
   start: '/*#NaturalLanguage',
   end: '#EndNaturalLanguage*/',
+  lineComment: '//',
 };
 
 export function getCommentBlockTokens(document: TextDocument): RegionTokens {

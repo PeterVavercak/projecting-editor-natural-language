@@ -2,8 +2,9 @@
 
 Extension to generate and display natural language description from code language using language model generation and vice versa.
 
-    - generates code language out of natural language.
-    - generates natural language out of code language.
+### Warning
+
+Required GitHub Copitot Registratui
 
 ## Projecting text
 

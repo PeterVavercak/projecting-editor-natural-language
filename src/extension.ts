@@ -1,5 +1,4 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+import * as vscode from  'vscode';
 import { registerSnapshotCommands } from "./commands";
 
 import { ExtensionContext, languages, window, workspace, Uri, commands } from "vscode";
@@ -36,6 +35,7 @@ const recentlyEditedDocs: ExtendedMap<Uri, number> = new ExtendedMap(() => -1);
 const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: ExtensionContext) {
+
 
 
   const treeView = window.createTreeView('projectingEditorView', {
@@ -75,12 +75,13 @@ export function activate(context: ExtensionContext) {
     }),
 
     window.onDidChangeVisibleTextEditors(() => {
+     
 
       updateAllDocuments();
       registerProviders(context);
     }),
 
-    workspace.onDidChangeTextDocument((e) => {
+    workspace.onDidChangeTextDocument((e) => {  
 
 
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));

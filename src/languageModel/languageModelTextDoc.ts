@@ -1,5 +1,5 @@
 
-import { CancellationTokenSource, LanguageModelChatMessage, LanguageModelChatResponse, lm, Position, TextDocument, WorkspaceEdit, Range, workspace } from 'vscode';
+import { CancellationTokenSource, window, LanguageModelChatMessage, LanguageModelChatResponse, lm, Position, TextDocument, WorkspaceEdit, Range, workspace, LanguageModelError } from 'vscode';
 import * as config from "../configuration";
 import { getRegionTokens } from '../languageTokens/languageRegionTokens';
 import { getDocumentLines, getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
@@ -22,17 +22,20 @@ export async function generateStructuredOutputResponse(document: TextDocument, u
             languageInstruction = GENERATE_REGIONS;
             break;
     }
-
-    let [model] = await lm.selectChatModels({
-        vendor: 'copilot',
-        family: languageModel
-    });
-    const messages = [
-        LanguageModelChatMessage.User(languageInstruction),
-        LanguageModelChatMessage.User(document.languageId),
-        LanguageModelChatMessage.User(documentLines)
-    ];
-    if (model) {
+    try {
+        let [model] = await lm.selectChatModels({
+            vendor: 'copilot',
+            family: languageModel
+        });
+        const messages = [
+            LanguageModelChatMessage.User(languageInstruction),
+            LanguageModelChatMessage.User(document.languageId),
+            LanguageModelChatMessage.User(documentLines)
+        ];
+        if (!model) {
+            window.showErrorMessage('Language model wasn`t found.');
+            return;
+        }
         let chatResponse = await model.sendRequest(
             messages,
             {},
@@ -45,6 +48,29 @@ export async function generateStructuredOutputResponse(document: TextDocument, u
         } else {
             await divideDocument(chatResponse, document);
         }
+
+    } catch (err) {
+        if (err instanceof LanguageModelError) {
+            if (err.code === 'Blocked') {
+                window.showErrorMessage(
+                    `No access for language model:\n${String(err)}`
+                );
+                return;
+            }
+            if (err.code === 'NoPermissions') {
+                window.showErrorMessage(
+                    `No permission for language model:\n + ${String(err)}`
+                );
+                return;
+            }
+            if (err.code === 'NotFound') {
+                window.showErrorMessage(
+                    `Requested language model not available or does not exist:\n + ${String(err)}`
+                );
+                return;
+            }
+        }
+        window.showErrorMessage(`Unexpected error: ${String(err)}`);
     }
 
 }
@@ -133,16 +159,16 @@ async function divideDocument(
     const edit = new WorkspaceEdit();
     const regionTokens = getRegionTokens(document);
     const regions: { firstLine: number, lastLine: number, level: number }[] = [];
-  
+
     for await (const obj of extractSequentialJsonObjects(response.text)) {
-         if (typeof obj !== 'object' || obj === null) {
+        if (typeof obj !== 'object' || obj === null) {
             continue;
         }
         const regionObject = obj as { firstLine: number, lastLine: number, level: number };
         regions.push(regionObject);
     }
     regions.sort((a, b) => b.level - a.level);
-    for(const region of regions){
+    for (const region of regions) {
         const indentation = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, region.firstLine);
 
         edit.insert(
