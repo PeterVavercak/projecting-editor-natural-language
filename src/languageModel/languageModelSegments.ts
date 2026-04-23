@@ -18,7 +18,6 @@ export async function generateLanguageResponse(
     if (languageModelInstruction === undefined || languageModelPrompt === undefined) {
         return;
     }
-    console.log('hello');
     try {
         let [model] = await lm.selectChatModels({
             vendor: 'copilot',
@@ -129,9 +128,11 @@ async function addNewNaturalLanguageIntoDoc(
     const edit = new WorkspaceEdit();
     let accumulatedResponse = await parseChatResponse(response);
     const commentTokens = getCommentBlockTokens(document);
+    const lineComment = document.languageId === 'python' ? commentTokens.lineComment + ' ' : '';
+
 
     const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, codeRange.start);
-    accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
+    accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + lineComment + line).join('\n');
 
     edit.insert(
         document.uri,
@@ -188,10 +189,13 @@ async function rewriteDocWithLanguageResponse(
         return;
     }
     let accumulatedResponse = await parseChatResponse(response);
+    const commentTokens = getCommentBlockTokens(document);
+    const lineComment = document.languageId === 'python' && useCase === 'updateNL' ? commentTokens.lineComment + ' ' : '';
+
     const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, codeRange.start + 1);
 
     if (useCase === 'updateNL') {
-        accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + line).join('\n');
+        accumulatedResponse = accumulatedResponse.split('\n').map(line => indent + lineComment + line).join('\n');
     }
 
     if (accumulatedResponse === "") {

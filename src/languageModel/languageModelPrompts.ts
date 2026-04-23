@@ -24,7 +24,7 @@ You are generator which would receive content of text document and you will gene
 * Do the output section with bullet points containing information about output of the code
 * If the code is very primitive, don't include bullet points
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
-* In case of language python each line in generated text should have "# " as prefix (should be commented). Do it only if language is python. If it is any other language leave as it is.
+* In case of language python, Don't include "#" comment line in updated text.
 * If regions are nested, make top level region most comprehensive, while more nested regions would have more straightforward translation
 * Make a note of the starting and ending line index of the natural language region if it exists
 * If there is Natural Language region for the code region, generated Response should be in format: {"startLine": <position  of start of natural language region>, "endLine": <position of end of natural language region>, "text": <text of natural language>}{...}... for each region.
@@ -89,8 +89,8 @@ python
 49: #endregion
 </written_text_document>
 <assistant_response id = "example1">
-{ "startLine": 0, "endLine": 2,  , "text" : "# Encodes a character into its binary representation as a list of boolean values.\\n#\\n# - Converts the character to its ASCII/Unicode code point.\\n# - Represents the code point as an 8-bit binary number, where each bit is stored as a boolean value in a list.\\n# \\n# Parameters:\\n# - 'character': A single character to be encoded.\\n#\\n# Returns:\\n# - A list of 8 boolean values representing the binary encoding of the character."}
-{ "line" : 38 , "text" :  "# ----\\n# Function to convert a 2D array of bytes into blocks of boolean values\\n# ----\\n#     - Initializes a 2D list 'blocks' with 'False' values.\\n#     - Iterates through columns and rows to populate 'blocks' based on 'bytes_arr'.\\n#     - Ensures that only valid indices within the bounds of 'rows' are accessed.\\n# ----\\n# Parameters:\\n#     - cols: number of columns in the resulting blocks.\\n#     - offset: determines the number of rows in 'blocks' as 'offset * 8'.\\n#     - rows: total number of rows in the input 'bytes_arr'.\\n#     - bytes_arr: 2D list of boolean values representing the input data.\\n# ----\\n# Returns:\\n#     - blocks: 2D list of boolean values representing the transformed data.\\n# ----" }
+{ "startLine": 0, "endLine": 2,  , "text" : "Encodes a character into its binary representation as a list of boolean values.\\n\\n- Converts the character to its ASCII/Unicode code point.\\n- Represents the code point as an 8-bit binary number, where each bit is stored as a boolean value in a list.\\n\\nParameters:\\n- 'character': A single character to be encoded.\\n\\nReturns:\\n- A list of 8 boolean values representing the binary encoding of the character."}
+{ "line" : 38 , "text" :  "----\\nFunction to convert a 2D array of bytes into blocks of boolean values\\n----\\n    - Initializes a 2D list 'blocks' with 'False' values.\\n    - Iterates through columns and rows to populate 'blocks' based on 'bytes_arr'.\\n    - Ensures that only valid indices within the bounds of 'rows' are accessed.\\n----\\nParameters:\\n    - cols: number of columns in the resulting blocks.\\n    - offset: determines the number of rows in 'blocks' as 'offset * 8'.\\n    - rows: total number of rows in the input 'bytes_arr'.\\n    - bytes_arr: 2D list of boolean values representing the input data.\\n----\\nReturns:\\n    - blocks: 2D list of boolean values representing the transformed data.\\n----" }
 </assistant_response>
 
 <written_text_document id = "example2">
@@ -134,10 +134,10 @@ python
 36: #endregion
 </written_text_document>
 <assistant_response id = "example2">
-{"line": 1, "text": "# ----\\n# Method to update a temporary file based on specified changes\\n# ----\\n#     - Reads lines from the file\\n#     - Extracts attributes like start and end positions, text, and range length from the change object\\n#     - Handles three scenarios: deletion, addition, and replacement of text\\n# ----\\n# Parameters:\\n#     - file_name: name of the file to be updated\\n#     - change: dictionary containing details about the change (e.g., range, text, rangeLength)\\n# ----\\n# Returns:\\n#     - No direct return; updates the file with the modified content\\n# ----"}
-{"line": 12, "text": "# If text empty, delete text from temporary file in defined range"}
-{"line": 19, "text": "# If range of changed text is 0, insert new text in temporary file in defined position"}
-{"line": 26, "text": "# If range of changed text is longer than 0 and text is not empty, change  text from selected range into inserted text"}
+{"line": 1, "text": "----\\nMethod to update a temporary file based on specified changes\\n----\\n    - Reads lines from the file\\n    - Extracts attributes like start and end positions, text, and range length from the change object\\n    - Handles three scenarios: deletion, addition, and replacement of text\\n----\\nParameters:\\n    - file_name: name of the file to be updated\\n    - change: dictionary containing details about the change (e.g., range, text, rangeLength)\\n----\\nReturns:\\n    - No direct return; updates the file with the modified content\\n----"}
+{"line": 12, "text": "If text empty, delete text from temporary file in defined range"}
+{"line": 19, "text": "If range of changed text is 0, insert new text in temporary file in defined position"}
+{"line": 26, "text": "If range of changed text is longer than 0 and text is not empty, change  text from selected range into inserted text"}
 </assistant_response>
 
 <written_text_document = "example3">
@@ -218,7 +218,7 @@ python
 7: #endregion
 </written_text_document>
 <assistant_response id = "example4">
-{"startLine": 0 "endLine": 4, "text":"----\n# Product of a and b\n----"}
+{"startLine": 0 "endLine": 4, "text":"----\nProduct of a and b\n----"}
 </assistant_response>
 
 <written_text_document id = "example5">
@@ -239,7 +239,7 @@ python
 13: #endregion
 </written_text_document>
 <assistant_response = "example5">
-{"startLine": 0 "endLine": 2, "text": "# Function to read csv file and put its values into 2d array"}
+{"startLine": 0 "endLine": 2, "text": "Function to read csv file and put its values into 2d array"}
 </assistant_response>
 
 <written_text_document id = "example6">
@@ -266,7 +266,7 @@ python
 </written_text_document>
 <assistant_response id = "example7">
 {"line":0, "text" : 
-"# ----\\n# Attempt to print each letter of text 'hello'\\n# ----\\n# ERROR: Loop variable is 'i' is character from text\\n# ERROR: Expression 'print(text[:i])' requires variable 'i' to be integer\\n# \\n# ----"}
+"----\\nAttempt to print each letter of text 'hello'\\n----\\nERROR: Loop variable is 'i' is character from text\\nERROR: Expression 'print(text[:i])' requires variable 'i' to be integer\\n\\n----"}
 </assistant_response>
 
 `;
@@ -505,7 +505,6 @@ You are translator. Your role is to translate given code into text in natural la
 * Do the output section with bullet points containing information about output of the code
 * If code is primitive enough, do not include bullet points.
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
-* In case of language python each line in generated text should have "# " as prefix (should be commented). Do it only if language is python. If it is any other language leave as it is.
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
 * Return Natural Language response as plain text without quotation around it
 
@@ -519,11 +518,11 @@ print('Hello, World!')
 #endregion
 </lm_prompt_code>
 <lm_response_natural_language id = "example1">
-# ----
-# Prints text "Hello, World!" into console
-# ----
-#     - Used as basic introduction into syntax of code language
-# ----
+----
+Prints text "Hello, World!" into console
+----
+    - Used as basic introduction into syntax of code language
+----
 </lm_response_natural_language>
 
 <lm_prompt_code id = "example2">
@@ -535,16 +534,16 @@ sum a + b
 #endregion
 </lm_prompt_code>
 <lm_response_natural_language id = "example2">
-# ----
-# Calculates sum 2 variables
-# ----
-# Variables:
-# - a: defines number 4
-# - b: defines number 6
-# ----
-# Result:
-# -sum: sum of variables a and b
-# ----
+----
+Calculates sum 2 variables
+----
+Variables:
+- a: defines number 4
+- b: defines number 6
+----
+Result:
+-sum: sum of variables a and b
+----
 </lm_response_natural_language >
 
 <lm_prompt_code id = "example3">
@@ -556,13 +555,13 @@ for i in text:
 #endregion
 </lm_prompt_code>
 <lm_response_natural_language id = "example3">
-# ----
-# Attempt to print each letter of text 'hello'
-# ----
-# ERROR: Loop variable is 'i' is character from text
-# ERROR: Expression 'print(text[:i])' requires variable 'i' to be integer
-# 
-# ----
+----
+Attempt to print each letter of text 'hello'
+----
+ERROR: Loop variable is 'i' is character from text
+ERROR: Expression 'print(text[:i])' requires variable 'i' to be integer
+
+----
 </lm_response_natural_language >
 
 <lm_prompt_code id = "example4">
@@ -575,15 +574,15 @@ def promote(self, amount):
 #endregion
 </lm_prompt_code>
 <lm_response_natural_language id = "example4">
-# ----
-# Method to increase salary by given amount
-# ----
-# Parameters:
-#     - amount: defines amount by which salary increases
-# ----
-# Returns:
-#     - Message about employee salary increase
-# ----
+----
+Method to increase salary by given amount
+----
+Parameters:
+    - amount: defines amount by which salary increases
+----
+Returns:
+    - Message about employee salary increase
+----
 </lm_response_natural_language>
 
 <lm_prompt_code id = "example5">
@@ -624,23 +623,23 @@ def add_string(lines, new_text, position_char, position_line):
 #endregion
 </lm_prompt_code>
 <lm_response_natural_language id = "example5">
-# ----
-# Function to insert text into list of lines
-# ----
-#     - Text is split by lines
-#     - Doesn't change original lines
-#     - Inserts text into exact position
-#     - Text inserted between lines behind the position and lines after the position
-# ----
-# Parameters: 
-#     - lines: list lines of original text
-#     - new_text: text to be inserted
-#     - position_char: horizontal position of insertion
-#     - position_line: vertical position of insertion
-# ----
-# Returns:
-#     - new_lines: list of lines with inserted text 
-# ----
+----
+Function to insert text into list of lines
+----
+    - Text is split by lines
+    - Doesn't change original lines
+    - Inserts text into exact position
+    - Text inserted between lines behind the position and lines after the position
+----
+Parameters: 
+    - lines: list lines of original text
+    - new_text: text to be inserted
+    - position_char: horizontal position of insertion
+    - position_line: vertical position of insertion
+----
+Returns:
+    - new_lines: list of lines with inserted text 
+----
 </lm_response_natural_language>
 `;
 export const UPDATE_NATURAL_LANGUAGE = ` 
@@ -665,7 +664,7 @@ You are updating translator. Your role is to update text in natural language acc
 * If code is very primitive enough, do not include bullet points
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
-* In case of language python each line in generated text should have "# " as prefix (should be commented). Do it only if language is python. If it is any other language leave as it is.
+* In case of language python, Don't include "# " comment line in updated text.
 * Return Natural Language response as plain text without quotation around it
 * If Natural Language segment fits the code perfectly, return empty string. Don't put any explanation about natural language text already describing the code, just return the empty string.
 
@@ -697,9 +696,9 @@ product = a * b
 #endregion
 </lm_prompt_natural_language_and_code>
 <lm_response_natural_language id = "example2">
-# ----
-# Product of a and b
-# ----
+----
+Product of a and b
+----
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example3">
@@ -720,7 +719,7 @@ def read_csv_to_2d_array(filename):
 #endregion
 </lm_prompt_natural_language_and_code>
 <lm_response_natural_language id = "example3">
-# Function to read csv file and put its values into 2d array 
+Function to read csv file and put its values into 2d array 
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example4">
@@ -768,23 +767,23 @@ def add_string(lines, new_text, position_char, position_line):
 #endregion
 </lm_prompt_natural_language_and_code>
 <lm_response_natural_language id = "example4">
-# ----
-# Function to insert text into list of lines
-# ----
-#     - Text is split by lines
-#     - Doesn't change original lines
-#     - Inserts text into exact position
-#     - Text inserted between lines behind the position and lines after the position
-# ----
-# Parameters: 
-#     - lines: list lines of original text
-#     - new_text: text to be inserted
-#     - position_char: horizontal position of insertion
-#     - position_line: vertical position of insertion
-# ----
-# Returns:
-#     - new_lines: list of lines with inserted text 
-# ----
+----
+Function to insert text into list of lines
+----
+    - Text is split by lines
+    - Doesn't change original lines
+    - Inserts text into exact position
+    - Text inserted between lines behind the position and lines after the position
+----
+Parameters: 
+    - lines: list lines of original text
+    - new_text: text to be inserted
+    - position_char: horizontal position of insertion
+    - position_line: vertical position of insertion
+----
+Returns:
+    - new_lines: list of lines with inserted text 
+----
 </lm_response_natural_language>
 
 <lm_prompt_natural_language_and_code id = "example5">
@@ -826,13 +825,13 @@ for i in text:
 #endregion
 </lm_prompt_natural_language_and_code>
 <lm_response_natural_language id = "example6">
-# ----
-# Attempt to print each letter of text 'hello'
-# ----
-# ERROR: Loop variable is 'i' is character from text
-# ERROR: Expression 'print(text[:i])' requires variable 'i' to be integer
-# 
-# ----
+----
+Attempt to print each letter of text 'hello'
+----
+ERROR: Loop variable is 'i' is character from text
+ERROR: Expression 'print(text[:i])' requires variable 'i' to be integer
+
+----
 </lm_response_natural_language>
 
 `;

@@ -34,7 +34,7 @@
     "onStartupFinished",
     "onView:myToolsView"
   ],
-  "extensionDependencies": ["GitHub.copilot"],
+  "extensionDependencies": ["GitHub.copilot-chat"],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [

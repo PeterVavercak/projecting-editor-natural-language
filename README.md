@@ -2,9 +2,9 @@
 
 Extension to generate and display natural language description from code language using language model generation and vice versa.
 
-### Warning
+### ⚠️ Warning
 
-Required GitHub Copitot Registratui
+This extension requires GitHub Copilot to function properly.
 
 ## Projecting text
 

@@ -1,4 +1,4 @@
-import * as vscode from  'vscode';
+import * as vscode from 'vscode';
 import { registerSnapshotCommands } from "./commands";
 
 import { ExtensionContext, languages, window, workspace, Uri, commands } from "vscode";
@@ -36,6 +36,18 @@ const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: ExtensionContext) {
 
+  const copilotExt = vscode.extensions.getExtension('GitHub.copilot-chat');
+
+  if (!copilotExt) {
+    vscode.window.showWarningMessage(
+      'This extension requires GitHub Copilot to function properly. Some features will be disabled.'
+    );
+    return;
+  }
+
+  if (!copilotExt.isActive) {
+    copilotExt.activate();
+  }
 
 
   const treeView = window.createTreeView('projectingEditorView', {
@@ -75,13 +87,13 @@ export function activate(context: ExtensionContext) {
     }),
 
     window.onDidChangeVisibleTextEditors(() => {
-     
+
 
       updateAllDocuments();
       registerProviders(context);
     }),
 
-    workspace.onDidChangeTextDocument((e) => {  
+    workspace.onDidChangeTextDocument((e) => {
 
 
       foldingProviders.forEach(([_, provider]) => provider.updateRanges(e.document));
@@ -115,17 +127,17 @@ export function activate(context: ExtensionContext) {
         foldingDecorator.triggerUpdateDecorations();
       }, 50);
     }),
-    
-      commands.registerCommand(CREATE_RESET_PROJECT, async () => {
-        restart();
-        updateAllDocuments();
-      })
-        
+
+    commands.registerCommand(CREATE_RESET_PROJECT, async () => {
+      restart();
+      updateAllDocuments();
+    })
+
   );
   registerProviders(context);
   updateAllDocuments();
-  
-  
+
+
   registerSnapshotCommands(foldingProviders, snapshotProvider);
 }
 
