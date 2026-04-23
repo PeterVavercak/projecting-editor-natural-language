@@ -148,9 +148,13 @@ export async function openComplementaryRegion(editor: TextEditor, foldingRanges:
         return;
     }
     if (wasTranslationUpdated(contentProvider, editor.document, foundTranslation)) {
+        const start = performance.now();
         await actionMutex.runExclusive('Generating complementary region', async () => {
             await generateTranslationRegion(editor, foundTranslation, chosenRegion, lastFolding);
         });
+        const end = performance.now();
+
+        console.log('Time of execution: '+ (end - start) +' for language model:' + config.getConfiguredLanguageModel() );
     }
     contentProvider.saveFromDocument(editor.document);
 

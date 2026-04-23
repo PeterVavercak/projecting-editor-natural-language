@@ -49,9 +49,12 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-
-      if (/^(?:\/\/\s*)?#region\b/i.test(line)) {
-        const name = line.replace(/^(?:\/\/\s*)?#region\b/i, "").trim() || undefined;
+      if (/^(?:\/\/\s*)?(?:#region\b|#pragma\s+region\b)/i.test(line)) {
+        //  if (/^(?:\/\/\s*)?#region\b/i.test(line)) {
+        // const name = line.replace(/^(?:\/\/\s*)?#region\b/i, "").trim() || undefined;
+        const name = line
+          .replace(/^(?:\/\/\s*)?(?:#region\b|#pragma\s+region\b)/i, "")
+          .trim() || undefined;
 
         const node: LineRegionNode = {
           name,
@@ -68,7 +71,8 @@ export default class RegionRangesProvider extends BetterFoldingRangeProvider {
         }
 
         stack.push(node);
-      } else if (/^(?:\/\/\s*)?#endregion\b/i.test(line)) {
+      } else if (/^(?:\/\/\s*)?(?:#endregion\b|#pragma\s+endregion\b)/i.test(line)) {
+        //} else if (/^(?:\/\/\s*)?#endregion\b/i.test(line)) {
         const current = stack.pop();
 
         if (!current) {
