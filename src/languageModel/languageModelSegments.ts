@@ -23,6 +23,7 @@ export async function generateLanguageResponse(
             vendor: 'copilot',
             family: languageModel
         });
+
         const messages = [
             LanguageModelChatMessage.User(languageModelInstruction),
             LanguageModelChatMessage.User(document.languageId),

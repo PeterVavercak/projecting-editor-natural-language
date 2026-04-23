@@ -35,7 +35,7 @@ const recentlyEditedDocs: ExtendedMap<Uri, number> = new ExtendedMap(() => -1);
 const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: ExtensionContext) {
-
+/*
   const copilotExt = vscode.extensions.getExtension('GitHub.copilot-chat');
 
   if (!copilotExt) {
@@ -48,7 +48,7 @@ export function activate(context: ExtensionContext) {
   if (!copilotExt.isActive) {
     copilotExt.activate();
   }
-
+*/
 
   const treeView = window.createTreeView('projectingEditorView', {
     treeDataProvider: toolsProvider,
