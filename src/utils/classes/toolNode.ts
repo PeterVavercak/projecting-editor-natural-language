@@ -1,12 +1,11 @@
 import { TreeItem, TreeItemCollapsibleState } from "vscode";
 
-type NodeKind = 'group' | 'action';
 
 export class ToolNode extends TreeItem {
   constructor(
     public readonly idValue: string,
     public readonly labelValue: string,
-    public readonly kind: NodeKind,
+    public readonly kind: 'group' | 'action',
     public readonly children: ToolNode[] = [],
     public readonly commandId?: string,
     public readonly commandArgs: unknown[] = []

@@ -1,7 +1,7 @@
 import { Range, TextDocument, TextEditor, Uri, window, FoldingRangeKind } from "vscode";
 import { BetterFoldingRange, DecorationsRecord, ProvidersList } from "../types";
 import ExtendedMap from "../utils/classes/extendedMap";
-import { capitalizeSafe, foldingRangeToRange, groupArrayToMap, rangeToInlineRange, unfoldedRangeToInlineRangeFirstLine, unfoldedRangeToInlineRangeLastLine } from "../utils/classes/functions/utils";
+import { capitalizeSafe, foldingRangeToRange, groupArrayToMap, rangeToInlineRange, unfoldedRangeToInlineRangeFirstLine, unfoldedRangeToInlineRangeLastLine } from "../utils/functions/utils";
 
 import FoldedLinesManager from "../utils/classes/managers/foldedLinesManager";
 import { DEFAULT_COLLAPSED_TEXT } from "../constants";

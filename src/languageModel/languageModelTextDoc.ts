@@ -1,8 +1,8 @@
 
 import { CancellationTokenSource, window, LanguageModelChatMessage, LanguageModelChatResponse, lm, Position, TextDocument, WorkspaceEdit, Range, workspace, LanguageModelError } from 'vscode';
 import * as config from "../configuration";
-import { getRegionTokens } from '../languageTokens/languageRegionTokens';
-import { getDocumentLines, getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
+import { getRegionTokens } from '../languageTokens/languageRegionToken';
+import { getDocumentLines, getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/functions/utils';
 import { getCommentBlockTokens } from '../languageTokens/languageCommentBlockToken';
 import { GENERATE_ALL_NATURAL_LANGUAGE, GENERATE_ALL_CODES, GENERATE_REGIONS } from './languageModelPrompts';
 
@@ -88,11 +88,11 @@ async function writeNaturalLanguages(
         }
         if ("line" in obj) {
             const nlObject = obj as { line: number, text: string };
-            const lineComment = document.languageId === 'python' ? commentTokens.lineComment + ' ' : ''; 
+            const lineComment = document.languageId === 'python' ? commentTokens.lineComment + ' ' : '';
 
             const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, nlObject.line);
             let nlText: string = nlObject.text;
-            nlText = nlText.split('\n').map(line => indent +lineComment + line).join('\n');
+            nlText = nlText.split('\n').map(line => indent + lineComment + line).join('\n');
 
             edit.insert(
                 document.uri,
@@ -101,7 +101,7 @@ async function writeNaturalLanguages(
             );
         } else if ("firstLine" in obj && "lastLine" in obj) {
             const nlObject = obj as { firstLine: number, lastLine: number, text: string };
-            const lineComment = document.languageId === 'python' ? commentTokens.lineComment + ' ' : ''; 
+            const lineComment = document.languageId === 'python' ? commentTokens.lineComment + ' ' : '';
 
             const indent = getPrefixBeforeFirstRealCharInNextNonEmptyLine(document, nlObject.lastLine + 1);
             let nlText: string = nlObject.text;

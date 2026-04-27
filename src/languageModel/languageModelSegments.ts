@@ -2,8 +2,8 @@ import { LanguageModelAccessInformation, workspace, window, WorkspaceEdit, Langu
 import { GENERATE_CODE, GENERATE_NATURAL_LANGUAGE, UPDATE_CODE, UPDATE_NATURAL_LANGUAGE } from './languageModelPrompts';
 import * as config from "../configuration";
 import { BetterFoldingRange, LanguageTranslation } from '../types';
-import { getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/classes/functions/utils';
-import { getRegionTokens } from '../languageTokens/languageRegionTokens';
+import { getPrefixBeforeFirstRealCharInNextNonEmptyLine } from '../utils/functions/utils';
+import { getRegionTokens } from '../languageTokens/languageRegionToken';
 import { getCommentBlockTokens } from '../languageTokens/languageCommentBlockToken';
 
 

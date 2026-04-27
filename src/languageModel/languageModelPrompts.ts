@@ -506,7 +506,11 @@ You are translator. Your role is to translate given code into text in natural la
 * If code is primitive enough, do not include bullet points.
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
-* Return Natural Language response as plain text without quotation around it
+* The output must be plain text only.
+* Do NOT use markdown code blocks.
+* Do NOT use triple backticks (\`\`\`).
+* Do NOT include any formatting markers.
+* The output must start directly with the content.
 
 
 # Examples
@@ -665,7 +669,11 @@ You are updating translator. Your role is to update text in natural language acc
 * If there is fragment which would raise error, ignore creating bullet points about details. Instead include error details in bullet points with prefix ERROR:
 * Don't make lines longer than 100 characters long, if text requires more divide it among multiple lines
 * In case of language python, Don't include "# " comment line in updated text.
-* Return Natural Language response as plain text without quotation around it
+* The output must be plain text only.
+* Do NOT use markdown code blocks.
+* Do NOT use triple backticks (\`\`\`).
+* Do NOT include any formatting markers.
+* The output must start directly with the content.
 * If Natural Language segment fits the code perfectly, return empty string. Don't put any explanation about natural language text already describing the code, just return the empty string.
 
 # Examples

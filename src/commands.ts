@@ -1,9 +1,9 @@
 // src/commands.ts
 import { Disposable, window, commands } from "vscode";
 import { generateStructuredOutputResponse } from "./languageModel/languageModelTextDoc";
-import { clearDocument, getRanges } from "./utils/classes/functions/utils";
+import { clearDocument, getRanges } from "./utils/functions/utils";
 import { ProvidersList } from "./types";
-import { closeEveryRegion, openEveryRegion, showAllCodeRegions, showAllNaturalLanguageRegions } from "./actions/foldingAction";
+import { closeEveryRegion, openEveryRegion, showAllCodeRegions, showAllNaturalLanguageRegions } from "./actions/globalFoldingAction";
 import { SnapshotProvider } from "./providers/snapshotProvider";
 import { actionMutex } from './utils/classes/managers/actionMutex';
 import { CREATE_GEN_CODE_COMMAND, CREATE_GEN_NL_COMMAND, CREATE_GEN_REGIONS_COMMAND, CREATE_PROJECT_ALL_COMMAND, CREATE_PROJECT_CODE_COMMAND, CREATE_PROJECT_NL_COMMAND, CREATE_PROJECT_NONE_COMMAND } from "./constants";

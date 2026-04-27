@@ -1,7 +1,7 @@
 {
   "name": "projecting-editor-nl-code",
-  "displayName": "Projecting Editor using Language Model",
-  "description": "Projecting editor to display response from LLM into text editor. Translates code language into natural language and vice versa.",
+  "displayName": "Projecting Editor using LLM",
+  "description": "Projecting editor to display response from LLM into text editor. Translates source code into natural language and vice versa.",
   "publisher": "PeterVaverk",
   "repository": {
     "type": "git",
@@ -62,17 +62,17 @@
       {
         "command": "Projection.showCodeRegions",
         "category": "Projection",
-        "title": "Show Code Regions"
+        "title": "Show Source Code Regions"
       },
       {
         "command": "Projection.showEveryRegion",
         "category": "Projection",
-        "title": "Show Every Regions"
+        "title": "Show All Regions"
       },
       {
         "command": "Projection.closeEveryRegion",
         "category": "Projection",
-        "title": "Close Every Regions"
+        "title": "Hide All Regions"
       },
       {
         "command": "Projection.restartDecorations",

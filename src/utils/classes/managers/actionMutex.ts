@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
+import { Disposable, Progress, ProgressLocation, window } from 'vscode';
 
-export class ActionMutex implements vscode.Disposable {
+export class ActionMutex implements Disposable {
   private locked = false;
   private currentActionName?: string;
 
@@ -14,11 +14,11 @@ export class ActionMutex implements vscode.Disposable {
 
   public async runExclusive<T>(
     actionName: string,
-    action: (progress: vscode.Progress<{ message?: string; increment?: number }>) => Promise<T>
+    action: (progress: Progress<{ message?: string; increment?: number }>) => Promise<T>
   ): Promise<T | undefined> {
     if (this.locked) {
       const runningAction = this.currentActionName ?? 'Another action';
-      void vscode.window.showInformationMessage(
+      void window.showInformationMessage(
         `${runningAction} is currently running. Please wait until it finishes.`
       );
       return undefined;
@@ -28,9 +28,9 @@ export class ActionMutex implements vscode.Disposable {
     this.currentActionName = actionName;
 
     try {
-      return await vscode.window.withProgress(
+      return await window.withProgress(
         {
-          location: vscode.ProgressLocation.Notification,
+          location: ProgressLocation.Notification,
           title: actionName,
           cancellable: false
         },
@@ -41,7 +41,7 @@ export class ActionMutex implements vscode.Disposable {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      void vscode.window.showErrorMessage(`${actionName} failed: ${message}`);
+      void window.showErrorMessage(`${actionName} failed: ${message}`);
       throw error;
     } finally {
       this.locked = false;

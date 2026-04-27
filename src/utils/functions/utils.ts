@@ -1,8 +1,7 @@
 import { TextDocument, Range, Position, WorkspaceEdit, workspace, window , ProgressLocation } from "vscode";
-import { BetterFoldingRange, ProvidersList } from "../../../types";
 
-import * as config from "../../../configuration";
-import BetterFoldingRangeProvider from "../../../providers/betterFoldingRangeProvider";
+import { BetterFoldingRange, NaturalLanguageRegionCouple, ProvidersList } from "../../types";
+import BetterFoldingRangeProvider from "../../providers/betterFoldingRangeProvider";
 
 export function groupArrayToMap<T, V>(array: T[], getValue: (element: T) => V, defaultValue?: V): Map<V, T[]> {
   const map: Map<V, T[]> = new Map();
@@ -51,6 +50,21 @@ export function objectEqual(a: any, b: any): boolean {
   }
 
   return true;
+}
+
+export function findCouples(foldingRanges: BetterFoldingRange[]): NaturalLanguageRegionCouple[] {
+    const codeRanges = foldingRanges.filter(range => range.foldingType === 'Source Code');
+    const naturalLanguageRanges = foldingRanges.filter(range => range.foldingType === 'Natural Language');
+    const relations = pairByRelation(naturalLanguageRanges, codeRanges, (nlRange, codeRange) => nlRange.end + 1 === codeRange.start);
+    const couples: NaturalLanguageRegionCouple[] = [];
+    for (const relation of relations) {
+        couples.push({
+            naturalLanguageFolding: relation.a,
+            codeFolding: relation.b,
+            nesting: relation.b?.nestingLevel
+        });
+    }
+    return couples;
 }
 
 export async function clearDocument(document: TextDocument, ranges: BetterFoldingRange[]) {

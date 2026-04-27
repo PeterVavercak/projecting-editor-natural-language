@@ -2,7 +2,7 @@ import { TextEditor, Uri, Range, window } from "vscode";
 import ExtendedMap from "../extendedMap";
 import { FoldingRangeAction, LastFoldedLine, ProvidersList } from "../../../types";
 import FoldedLinesManager from "./foldedLinesManager";
-import { foldingRangeToRange, getRanges } from "../functions/utils";
+import { foldingRangeToRange, getRanges } from "../../functions/utils";
 import { isProgrammaticFold } from "../../variables";
 
 

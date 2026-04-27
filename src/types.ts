@@ -75,6 +75,8 @@ export type TreeNode<T> = {
   children: TreeNode<T>[];
 };
 
+
+
 export type ProvidersList = [selector: string, provider: BetterFoldingRangeProvider][];
 
 export type DecorationsRecord = Record<string, TextEditorDecorationType>;

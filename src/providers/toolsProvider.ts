@@ -1,5 +1,5 @@
 import { TreeDataProvider, TreeItem } from "vscode";
-import { ToolNode } from "./toolNode";
+import { ToolNode } from "../utils/classes/toolNode";
 import { CREATE_GEN_CODE_COMMAND, CREATE_GEN_NL_COMMAND, CREATE_GEN_REGIONS_COMMAND, CREATE_PROJECT_ALL_COMMAND, CREATE_PROJECT_CODE_COMMAND, CREATE_PROJECT_NL_COMMAND } from "../constants";
 
 export class ToolsProvider implements TreeDataProvider<ToolNode> {

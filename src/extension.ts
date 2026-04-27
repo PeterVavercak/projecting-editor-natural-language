@@ -13,8 +13,8 @@ import { ProvidersList } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 
 import ExtendedMap from './utils/classes/extendedMap';
-import { openComplementaryRegion } from './actions/foldingAction';
-import { getRanges } from './utils/classes/functions/utils';
+import { openComplementaryRegion } from './actions/complementaryFoldingAction';
+import { getRanges } from './utils/functions/utils';
 import { SNAPSHOT_SCHEME, SnapshotProvider } from './providers/snapshotProvider';
 import NLRangesProvider from './providers/nlRangesProvider';
 import { ToolsProvider } from "./providers/toolsProvider";
@@ -31,24 +31,9 @@ const registeredLanguages = new Set<string>();
 
 const recentlyEditedDocs: ExtendedMap<Uri, number> = new ExtendedMap(() => -1);
 
-
 const snapshotProvider = new SnapshotProvider();
 
 export function activate(context: ExtensionContext) {
-/*
-  const copilotExt = vscode.extensions.getExtension('GitHub.copilot-chat');
-
-  if (!copilotExt) {
-    vscode.window.showWarningMessage(
-      'This extension requires GitHub Copilot to function properly. Some features will be disabled.'
-    );
-    return;
-  }
-
-  if (!copilotExt.isActive) {
-    copilotExt.activate();
-  }
-*/
 
   const treeView = window.createTreeView('projectingEditorView', {
     treeDataProvider: toolsProvider,

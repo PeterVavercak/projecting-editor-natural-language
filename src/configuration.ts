@@ -14,7 +14,7 @@ export function getAutomaticFolding() {
 }
 
 export function showDecorations() {
-  return workspace.getConfiguration( CONFIG_ID ).get<boolean>("showDecorations") ?? false;
+  return workspace.getConfiguration(CONFIG_ID).get<boolean>("showDecorations") ?? false;
 }
 
 
