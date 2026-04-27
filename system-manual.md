@@ -181,7 +181,7 @@ src/
 
 * mutex class
 
-###### `foldedLinesManager.ts`
+##### `foldedLinesManager.ts`
 
 * Singleton class.
 * Finds whether ranges are folded in tex editor or not.

@@ -92,6 +92,8 @@ If region name exists decoration name is that name.
 
 Can reset glitched decoration by command `Reset Decoration`. Command bar can be opened by pressing `Ctrl + Shift + P`.
 
+![Reset Decoration](/resources/README/reset-decorations.gif)
+
 ## AutoCompletion
 
 Auto completion of code language region and natural language region.
