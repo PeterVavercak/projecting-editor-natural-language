@@ -28,7 +28,7 @@ Extension available on webpage [Projecting Editor using Large Language Model](ht
     - Search Extension for Projecting Editor using LLM
     - Click Install.
 
-##### In case of extnsion not working try to restart Visual Studio Code 
+##### In case of extension not working try to restart Visual Studio Code 
 
 ## Manual
 
