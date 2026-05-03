@@ -2,11 +2,11 @@
 
 ## Run extension
 
+* Install dependencies by typing into terminal `npm install`
 * Press `F5` to open a new window with your extension loaded.
 * Run your command from the command palette by pressing (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac).
 * Set breakpoints in your code inside `src` directory to debug your extension.
 * Find output from your extension in the debug console.
-* Install dependencies by typing into termcinal `npm install`
 * `example/` - Potential folder used as main directory after launching extension.
 
 
@@ -208,10 +208,6 @@ src/
 ##### `types.ts`
 
 * Defined Types used in across the source code.
-
-
-
-
 
 ## Run tests
 
