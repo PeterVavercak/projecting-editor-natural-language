@@ -105,9 +105,15 @@ Commands under category Projection:
 - Hide All Regions - Hides all natural language and source code regions.
 - Reset Decorations - Will remove all glitched decoration in text document.
 
+#### Commands in UI
+
+- Located in right side in activity bar.
+
+![Command In UI](/resources/user-manual/commands-in-ui.png)
+
 ### Decoration
 
-When Decorations in setting are switched on, decorations will show in place of text of firtst line of folded region
+When Decorations in setting are switched on, decorations will show in place of text of first line of folded region
 
 Decoration that will show up:
 - Natural Language/ Source Code when name is not defined
@@ -129,7 +135,6 @@ Decoration that will show up:
 1. Find the extension in extension menu
 2. Click on gear icon -> Settings
 
-![Gear Icon](/resources/user-manual/configuration-options.png)
 
 ### Possible settings
 
