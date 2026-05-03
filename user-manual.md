@@ -34,23 +34,23 @@ Extension available on webpage [Projecting Editor using Large Language Model](ht
 
 ### Source Code Region
 
-Source code region is written in between #region/#endregion markers according to given language
+Source code region is written in between `#region/#endregion` markers according to given language
 
-Python, C#
+**Python, C#**
 ```
 #region
 <source code>
 #endregion
 ```
 
-Java, JavaScript, TypeScript
+**Java, JavaScript, TypeScript**
 ```
 //#region
 <source code>
 //#endregion 
 ```
 
-C, C++
+**C, C++**
 ```
 #pragma region
 <source code>
@@ -60,16 +60,17 @@ C, C++
 
 ### Natural Language Region
 
-Natural language region is written in between #NaturalLanguage/#EndNaturalLanguage markers inside comment block or inside comment sequence by language used
+Natural language region is written in between `#NaturalLanguage/#EndNaturalLanguage` markers inside comment block or inside comment sequence by language used
 
-Python
+**Python**
+
 ```
 #NaturalLanguage
 # <natural language text>
 #EndNaturalLanguage
 ```
 
-Java, C#, JavaScript, TypeScript, C, C++
+**Java, C#, JavaScript, TypeScript, C, C++**
 ```
 /*#NaturalLanguage
 <natural language text>
@@ -86,12 +87,12 @@ Opened region has its content generated or updated based on content of closed re
 
 Switch between region by triggering folding/unfolding on one of the regions.
 
-![Unfolded Natural Language](/resources/user-manual/natural-language-unfolded.png)
-![Unfolded Source Code](/resources/user-manual/source-code-unfolded.png)
+![Unfolded Natural Language](resources/natural-language-unfolded.png)
+![Unfolded Source Code](resources/source-code-unfolded.png)
 
 ### Commands
 
-Pick a command by pressing Ctrl + Shift + p.
+Pick a command by pressing `Ctrl + Shift + p`.
 
 Command under category Generation:
 - Generate Natural Language - generates natural language regions for all source code region in opened text document file
@@ -109,24 +110,26 @@ Commands under category Projection:
 
 - Located in right side in activity bar.
 
-![Command In UI](/resources/user-manual/commands-in-ui.png)
+![Command In UI](resources/commands-in-ui.png)
 
 ### Decoration
 
 When Decorations in setting are switched on, decorations will show in place of text of first line of folded region
 
 Decoration that will show up:
-- Natural Language/ Source Code when name is not defined
+- `Natural Language` or `Source Code` when name is not defined.
 
-![Unnamed Decoration](/resources/user-manual/unnanmed-decoration.png)
+![Unnamed Decoration](resources/unnanmed-decoration.png)
 
-- Name of region when name is defined
+- Name of region when name is defined.
 
-![Named Decoration](/resources/user-manual/named-decoration.png)
+![Named Decoration](resources/named-decoration.png)
 
 #### Commands in UI
 
-![Command In UI](/resources/user-manual/commands-in-ui.png)
+Located in activity bar on right side of the editor.
+
+![Command In UI](resources/commands-in-ui.png)
 
 ## Configuration
 
